@@ -17,6 +17,7 @@ app.include_router(groups.router)
 app.include_router(media.router)
 app.include_router(privacy.router)
 app.include_router(secret_chat.router)
+app.include_router(realtime.router)
 
 @app.get("/")
 def home():
