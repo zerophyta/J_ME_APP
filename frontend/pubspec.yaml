@@ -1,5 +1,25 @@
+name: j_me_app
+description: A new Flutter project for testing J_ME_APP
+publish_to: "none" # usipange ku-publish kwenye pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: '^3.4.0'
+
 dependencies:
   flutter:
     sdk: flutter
   web_socket_channel: ^2.4.0
   shared_preferences: ^2.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  mockito: ^5.4.0
+  integration_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+

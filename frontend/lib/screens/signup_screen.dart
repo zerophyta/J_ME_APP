@@ -13,38 +13,40 @@ class _SignupScreenState extends State<SignupScreen> {
   final nameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
-  String message = "";
+
+  String message = ""; // <-- lazima utangaze hii
 
   Future<void> _signup() async {
-    bool success = await api.createUser(
-      nameController.text,
-      emailController.text,
-      passwordController.text,
-    );
-    setState(() {
-      message = success ? "Signup successful ✅" : "Signup failed ❌";
-    });
-    if (success) {
-      Navigator.pushNamed(context, "/chat");
-    }
+  final result = await api.createUser(
+    nameController.text,
+    emailController.text,
+    passwordController.text,
+  );
+
+  // mfano: kama result ni Map
+  bool success = result["success"] == true;
+
+  setState(() {
+    message = success ? "Signup successful ✅" : "Signup failed ❌";
+  });
+
+  if (success) {
+    Navigator.pushNamed(context, "/chat");
   }
+}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("J_ME Signup")),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            TextField(controller: nameController, decoration: const InputDecoration(labelText: "Name")),
-            TextField(controller: emailController, decoration: const InputDecoration(labelText: "Email")),
-            TextField(controller: passwordController, decoration: const InputDecoration(labelText: "Password"), obscureText: true),
-            const SizedBox(height: 20),
-            ElevatedButton(onPressed: _signup, child: const Text("Signup")),
-            Text(message)
-          ],
-        ),
+      appBar: AppBar(title: const Text("Signup")),
+      body: Column(
+        children: [
+          TextField(controller: nameController, decoration: const InputDecoration(hintText: "Name")),
+          TextField(controller: emailController, decoration: const InputDecoration(hintText: "Email")),
+          TextField(controller: passwordController, decoration: const InputDecoration(hintText: "Password")),
+          ElevatedButton(onPressed: _signup, child: const Text("Signup")),
+          Text(message), // onyesha feedback
+        ],
       ),
     );
   }

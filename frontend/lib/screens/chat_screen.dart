@@ -5,23 +5,6 @@ import '../api/ws_client.dart';
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
 
-  ws.stream.listen((event) {
-  if (event["type"] == "message:new") {
-    setState(() {
-      messages.add(event["data"]);
-    });
-  } else if (event["type"] == "typing") {
-    setState(() {
-      typingUser = event["sender_id"];
-    });
-  } else if (event["type"] == "group:new_message") {
-    setState(() {
-      messages.add(event);
-    });
-  }
-});
-
-
   @override
   State<ChatScreen> createState() => _ChatScreenState();
 }
@@ -31,18 +14,30 @@ class _ChatScreenState extends State<ChatScreen> {
   final WsClient ws = WsClient();
   final messageController = TextEditingController();
   List<dynamic> messages = [];
+  int? typingUser;
 
-    @override
-      void initState() {
-       super.initState();
-        ws.connect(userId: 1); // current user id
-        ws.stream.listen((event) {
-         if (event["type"] == "message:new") {
-         setState(() {
+  @override
+  void initState() {
+    super.initState();
+    ws.connect(userId: 1); // current user id
+
+    // Sikiliza events kutoka websocket
+    ws.stream.listen((event) {
+      if (event["type"] == "message:new") {
+        setState(() {
           messages.add(event["data"]);
+        });
+      } else if (event["type"] == "typing") {
+        setState(() {
+          typingUser = event["sender_id"];
+        });
+      } else if (event["type"] == "group:new_message") {
+        setState(() {
+          messages.add(event);
         });
       }
     });
+
     _loadMessages();
   }
 
@@ -55,18 +50,15 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _sendMessage() async {
     await api.sendMessage(1, 1, messageController.text); // chat_id=1, sender_id=1
-    ws.send({"type": "message:new", "data": {"content": messageController.text, "sender_id": 1}});                              
+    ws.send({
+      "type": "message:new",
+      "data": {"content": messageController.text, "sender_id": 1}
+    });
     messageController.clear();
     _loadMessages();
   }
 
   @override
-  void initState() {
-    super.initState();
-    _loadMessages();
-  }
-
- @override
   void dispose() {
     ws.dispose();
     super.dispose();
@@ -92,7 +84,12 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           Row(
             children: [
-              Expanded(child: TextField(controller: messageController, decoration: const InputDecoration(hintText: "Type message..."))),
+              Expanded(
+                child: TextField(
+                  controller: messageController,
+                  decoration: const InputDecoration(hintText: "Type message..."),
+                ),
+              ),
               IconButton(onPressed: _sendMessage, icon: const Icon(Icons.send))
             ],
           )
@@ -101,5 +98,3 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 }
-
-
