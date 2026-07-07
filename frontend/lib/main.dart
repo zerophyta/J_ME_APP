@@ -10,13 +10,7 @@ import 'screens/view_once_screen.dart';
 import 'screens/disappearing_messages_screen.dart';
 import 'screens/message_editing_screen.dart';
 import 'screens/message_deletion_screen.dart';
-import 'widgets/reaction_bar.dart';
-import 'widgets/reaction_row.dart';
-import 'widgets/thread_view.dart';
-import 'widgets/thread_preview.dart';
 import 'screens/forward_message_screen.dart';
-import 'widgets/reply_bubble.dart';
-import 'widgets/reply_preview.dart';
 
 void main() {
   runApp(const JMeApp());

@@ -51,79 +51,42 @@ class _SecretChatScreenState extends State<SecretChatScreen> {
     });
   }
 
-  Future<void> _sendMessage() async {
-    await api.sendSecretMessage(widget.chatId, widget.userId, messageController.text);
-    ws.send({
-      "type": "secret:new_message",
-      "chat_id": widget.chatId,
-      "sender_id": widget.userId,
-      "content": messageController.text,
-    });
-    messageController.clear();
-  } 
-
   Future<void> _sendMessage(String text) async {
-    bool success = await api.sendSecretMessage(widget.chatId, widget.userId, text, selfDestructSeconds);
+    final trimmedText = text.trim();
+    if (trimmedText.isEmpty) return;
+
+    final success = await api.sendSecretMessage(
+      widget.chatId,
+      widget.userId,
+      trimmedText,
+      selfDestructSeconds ?? 0,
+    );
+
     if (success) {
+      ws.send({
+        "type": "secret:new_message",
+        "chat_id": widget.chatId,
+        "sender_id": widget.userId,
+        "content": trimmedText,
+      });
       _loadMessages();
-      setState(() => message = "Message sent ✅");
+      setState(() {
+        message = "Message sent ✅";
+      });
+      messageController.clear();
     } else {
-      setState(() => message = "Failed ❌");
+      setState(() {
+        message = "Failed ❌";
+      });
     }
   }
 
   @override
   void dispose() {
     ws.dispose();
+    messageController.dispose();
     super.dispose();
   }
-
-@override
-  Widget build(BuildContext context) {
-    final controller = TextEditingController();
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Secret Chat"),
-        backgroundColor: const Color(0xFF0A1A2F), // dark blue
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              itemCount: messages.length,
-              itemBuilder: (_, i) {
-                final msg = messages[i];
-                return ListTile(
-                  title: Text(msg["content"], style: const TextStyle(color: Colors.white)),
-                  subtitle: Text("Expires in ${msg["expires_in"]}s", style: const TextStyle(color: Colors.white70)),
-                );
-              },
-            ),
-          ),
-          Container(
-            color: const Color(0xFFD4AF37), // gold accent
-            padding: const EdgeInsets.all(8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: controller,
-                    decoration: const InputDecoration(hintText: "Type secret message..."),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.send, color: Colors.white),
-                  onPressed: () => _sendMessage(controller.text),
-                ),
-              ],
-            ),
-          ),
-          Text(message, style: const TextStyle(color: Colors.white)),
-        ],
-      ),
-    );
-  }
-
 
   @override
   Widget build(BuildContext context) {
@@ -158,17 +121,28 @@ class _SecretChatScreenState extends State<SecretChatScreen> {
               },
             ),
           ),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: messageController,
-                  decoration: const InputDecoration(hintText: "Type secret message..."),
+          Container(
+            color: const Color(0xFFD4AF37),
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: messageController,
+                    decoration: const InputDecoration(hintText: "Type secret message..."),
+                  ),
                 ),
-              ),
-              IconButton(onPressed: _sendMessage, icon: const Icon(Icons.send))
-            ],
-          )
+                IconButton(
+                  onPressed: () => _sendMessage(messageController.text),
+                  icon: const Icon(Icons.send),
+                )
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Text(message),
+          ),
         ],
       ),
     );

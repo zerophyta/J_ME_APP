@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 
 class ApiClient {
@@ -16,30 +17,32 @@ class ApiClient {
     }
     return headers;
   }
-  
-  Future<bool> uploadMedia(int chatId, int senderId, File file, String fileType) async {
-  await loadToken();
-  var request = http.MultipartRequest(
-    "POST",
-    Uri.parse("$baseUrl/media/upload"),
-  );
-  request.headers.addAll(_headers(auth: true));
-  request.fields["message_id"] = chatId.toString();
-  request.fields["file_type"] = fileType;
-  request.files.add(await http.MultipartFile.fromPath("file", file.path));
 
-  var response = await request.send();
-  return response.statusCode == 200;
-}
-
-  Future<bool> createUser(String name, String email, String password) async {
-  final body = jsonEncode({"name": name, "email": email, "password": password});
-  final res = await http.post(Uri.parse("$baseUrl/users"), headers: _headers(), body: body);
-  if (res.statusCode == 201) {
-    return true;
+  Future<void> loadToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    token = prefs.getString('auth_token');
   }
-  return false;
-}
+
+  Future<void> saveToken(String authToken) async {
+    final prefs = await SharedPreferences.getInstance();
+    token = authToken;
+    await prefs.setString('auth_token', authToken);
+  }
+
+  Future<bool> uploadMedia(int chatId, int senderId, File file, String fileType) async {
+    await loadToken();
+    var request = http.MultipartRequest(
+      "POST",
+      Uri.parse("$baseUrl/media/upload"),
+    );
+    request.headers.addAll(_headers(auth: true));
+    request.fields["message_id"] = chatId.toString();
+    request.fields["file_type"] = fileType;
+    request.files.add(await http.MultipartFile.fromPath("file", file.path));
+
+    var response = await request.send();
+    return response.statusCode == 200;
+  }
 
   // 🟢 Root check
   Future<String> checkServer() async {
@@ -70,8 +73,11 @@ class ApiClient {
         headers: _headers(), body: body);
     if (res.statusCode == 200) {
       final data = jsonDecode(res.body);
-      token = data["token"];
-      return true;
+      final authToken = data["token"];
+      if (authToken != null) {
+        await saveToken(authToken);
+        return true;
+      }
     }
     return false;
   }
@@ -102,15 +108,6 @@ class ApiClient {
   }
 
   // 📎 Upload media
-  Future<Map<String, dynamic>> uploadMedia(
-      int messageId, String fileUrl, String fileType) async {
-    final body =
-        jsonEncode({"message_id": messageId, "file_url": fileUrl, "file_type": fileType});
-    final res = await http.post(Uri.parse("$baseUrl/media/"),
-        headers: _headers(auth: true), body: body);
-    return jsonDecode(res.body);
-  }
-
   // 🔒 Set privacy
   Future<Map<String, dynamic>> setPrivacy(
       int userId, String setting, String value) async {
@@ -147,14 +144,6 @@ Future<List<dynamic>> getSecretMessages(int chatId) async {
   final res = await http.get(Uri.parse("$baseUrl/secret_chat/$chatId"),
       headers: _headers(auth: true));
   return jsonDecode(res.body);
-}
-
-Future<bool> sendSecretMessage(int chatId, int senderId, String content) async {
-  await loadToken();
-  final body = jsonEncode({"chat_id": chatId, "sender_id": senderId, "content": content});
-  final res = await http.post(Uri.parse("$baseUrl/secret_chat/send"),
-      headers: _headers(auth: true), body: body);
-  return res.statusCode == 200;
 }
 
 Future<bool> setSettings(bool notifications, bool darkTheme, String username) async {
@@ -370,7 +359,7 @@ Future<List<dynamic>> getSecretMessages(int chatId) async {
   return jsonDecode(res.body);
 }
 
-Future<bool> sendSecretMessage(int chatId, int userId, String content, int destructSeconds) async {
+Future<bool> sendSecretMessage(int chatId, int userId, String content, [int destructSeconds = 0]) async {
   await loadToken();
   final body = jsonEncode({
     "chat_id": chatId,
