@@ -8,10 +8,13 @@ class MessageBase(BaseModel):
     content: str
 
 class MessageCreate(MessageBase):
-    pass
+    chat_id: int
+    sender_id: int
 
 class MessageResponse(MessageBase):
     id: int
+    chat_id: int
+    sender_id: int
     timestamp: datetime
 
     class Config:

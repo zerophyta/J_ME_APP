@@ -6,12 +6,6 @@ from app.routers import auth, users, chats, messages, groups, media, privacy, se
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-# Create database tables
-try:
-    Base.metadata.create_all(bind=engine)
-except SQLAlchemyError:
-    pass
-
 # Initialize FastAPI app
 app = FastAPI(title="J_ME Backend", version="1.0.0")
 

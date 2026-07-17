@@ -11,3 +11,4 @@ class Chat(Base):
 
     owner = relationship("User")
 
+messages = relationship("Message", back_populates="chat", cascade="all, delete-orphan")
