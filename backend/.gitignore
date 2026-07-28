@@ -1,0 +1,44 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+.env
+*.env
+
+# Alembic migrations cache
+alembic/versions/*.pyc
+alembic/versions/__pycache__/
+# (NB: usiignore migration .py files zako, ignore only pyc)
+
+# Database files
+*.db
+*.sqlite3
+
+# Logs
+*.log
+logs/
+*.out
+
+# IDE / Editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python packaging
+*.egg-info/
+dist/
+build/
+
+# Coverage / testing
+.coverage
+htmlcov/
+.pytest_cache/
+

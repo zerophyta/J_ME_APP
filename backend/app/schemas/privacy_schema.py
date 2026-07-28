@@ -1,15 +1,15 @@
 from pydantic import BaseModel
 
-class PrivacyBase(BaseModel):
+class PrivacyCreate(BaseModel):
+    user_id: int
+    setting: str
+    value: str   
+
+class PrivacyResponse(BaseModel):
+    id: int
     user_id: int
     setting: str
     value: str
-
-class PrivacyCreate(PrivacyBase):
-    pass
-
-class PrivacyResponse(PrivacyBase):
-    id: int
 
     class Config:
         orm_mode = True

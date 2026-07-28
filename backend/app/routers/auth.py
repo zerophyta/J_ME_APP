@@ -51,6 +51,12 @@ async def register(user: UserRegister, db: Session = Depends(get_db)):
     existing_user = db.query(User).filter(User.email == user.email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already exists")
+ 
+    #check if phone exist
+    existing_user = db.query(User).filter(User.phone == user.phone).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Phone number already registered")
+
 
     # validate phone if provided
     if user.phone:

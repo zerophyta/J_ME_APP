@@ -12,8 +12,7 @@ class UserRegister(BaseModel):
     username: str
     email: EmailStr
     password: str
-    phone: Optional[str] = None   # optional lakini ikitumwa itahifadhiwa
-
+    phone: Optional[str] = None   # optional lakini ikitumwa ita>
 
 class UserResponse(BaseModel):
     id: int
@@ -24,3 +23,5 @@ class UserResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
+

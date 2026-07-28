@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.database import SessionLocal
+from app.database import SessionLocal # get_db
 from app.models.user import User
 from app.schemas.user_schema import UserResponse, UserUpdate
 from app.utils.password_hash import hash_password
@@ -29,20 +29,21 @@ def update_user(user_id: int, user_update: UserUpdate, db: Session = Depends(get
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    if user_update.username:
-        db_user.username = user_update.username
-    if user_update.email:
-        db_user.email = user_update.email
-    if user_update.phone:
-        db_user.phone = user_update.phone
-    if user_update.avatar:
-        db_user.avatar = user_update.avatar
-    if user_update.password:
-        db_user.password = hash_password(user_update.password)
+    # convert to dict, exclude fields ambazo hazijatumwa
+    update_data = user_update.dict(exclude_unset=True)
+
+    # handle password separately (hashing)
+    if "password" in update_data:
+        update_data["password"] = hash_password(update_data["password"])
+
+    # apply updates
+    for key, value in update_data.items():
+        setattr(db_user, key, value)
 
     db.commit()
     db.refresh(db_user)
     return db_user
+
 
 # DELETE user
 @router.delete("/{user_id}")
