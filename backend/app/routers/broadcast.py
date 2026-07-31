@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models import Broadcast, BroadcastRecipient, User, ChatMember
 from app.schemas import BroadcastRequest
+from app.models.chat import Chat
+from app.models.secret_chat import SecretChat
 
 router = APIRouter()
 
@@ -25,22 +27,26 @@ def send_broadcast(request: BroadcastRequest, db: Session = Depends(get_db)):
     if len(recipients) != len(request.recipient_ids):
         raise HTTPException(status_code=400, detail="One or more recipients not found")
 
-    # check kama wote wako kwenye chat moja
-    # chukua chat_ids ambazo sender yupo
-    sender_chats = db.query(ChatMember.chat_id).filter(ChatMember.user_id == sender.id).all()
-    sender_chat_ids = [c.chat_id for c in sender_chats]
-
-    if not sender_chat_ids:
-        raise HTTPException(status_code=400, detail="Sender is not in any chat")
-
-    # kwa kila recipient, lazima awe kwenye moja ya chat_ids za sender
+    # check kama recipients wako kwenye chat moja na sender (group OR normal OR secret)
     for rid in request.recipient_ids:
-        exists = db.query(ChatMember).filter(
-            ChatMember.user_id == rid,
-            ChatMember.chat_id.in_(sender_chat_ids)
+        in_group = db.query(ChatMember).filter(
+            ChatMember.user_id == sender.id,
+            ChatMember.chat_id == ChatMember.chat_id,
+            ChatMember.user_id == rid
         ).first()
-        if not exists:
-            raise HTTPException(status_code=400, detail=f"Recipient {rid} not in same chat with sender")
+
+        in_normal = db.query(Chat).filter(
+            ((Chat.user1_id == sender.id) & (Chat.user2_id == rid)) |
+            ((Chat.user2_id == sender.id) & (Chat.user1_id == rid))
+        ).first()
+
+        in_secret = db.query(SecretChat).filter(
+            ((SecretChat.user1_id == sender.id) & (SecretChat.user2_id == rid)) |
+            ((SecretChat.user2_id == sender.id) & (SecretChat.user1_id == rid))
+        ).first()
+
+        if not (in_group or in_normal or in_secret):
+            raise HTTPException(status_code=400, detail=f"Recipient {rid} not in same chat/secret_chat with sender")
 
     # create broadcast
     broadcast = Broadcast(sender_id=request.sender_id, content=request.content)
@@ -58,6 +64,11 @@ def send_broadcast(request: BroadcastRequest, db: Session = Depends(get_db)):
     return {
         "status": "success",
         "message": f"Broadcast sent to {len(request.recipient_ids)} users",
-        "broadcast_id": broadcast.id
+        "broadcast_id": broadcast.id,
+        "content": broadcast.content,
+        "sender": {
+            "id": sender.id,
+            "username": sender.username
+        },
+        "recipients": [{"id": r.id, "username": r.username} for r in recipients]
     }
-

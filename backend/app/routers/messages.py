@@ -61,8 +61,8 @@ def send_message(message: MessageCreate, db: Session = Depends(get_db)):
         if message.receiver_id not in [secret_chat.user1_id, secret_chat.user2_id]:
             raise HTTPException(status_code=403, detail="Receiver not in this secret chat")
 
-        if message.sender_id == message.receiver_id:
-            raise HTTPException(status_code=400, detail="Sender and receiver cannot be the same")
+       # if message.sender_id == message.receiver_id:
+           # raise HTTPException(status_code=400, detail="Sender and receiver cannot be the same")
 
         new_msg = Message(
             secret_chat_id=message.secret_chat_id,
@@ -103,28 +103,6 @@ def send_message(message: MessageCreate, db: Session = Depends(get_db)):
     db.refresh(new_msg)
     return new_msg
 
-@router.post("/broadcast")
-def broadcast_message(content: str, current_user_id: int, db: Session = Depends(get_db)):
-    # validate current user
-    admin = db.query(User).filter(User.id == current_user_id).first()
-    if not admin or admin.role != "admin":
-        raise HTTPException(status_code=403, detail="Only admins can broadcast messages")
-
-    # fetch all users except admin
-    users = db.query(User).filter(User.id != current_user_id).all()
-
-    # create message for each user
-    for u in users:
-        msg = Message(
-            sender_id=current_user_id,
-            receiver_id=u.id,
-            content=content,
-            created_at=datetime.utcnow()
-        )
-        db.add(msg)
-
-    db.commit()
-    return {"status": "success", "sent_to": len(users)}
 
 
 @router.get("/", response_model=list[MessageResponse])

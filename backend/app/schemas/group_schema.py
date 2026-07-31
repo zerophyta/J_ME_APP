@@ -6,6 +6,10 @@ class GroupBase(BaseModel):
     name: str
     admin_id: int
 
+class MemberResponse(BaseModel):
+    id: int
+    username: str
+
 class GroupCreate(GroupBase):
     pass
 
@@ -14,6 +18,7 @@ class GroupResponse(GroupBase):
     name: str
     admin_id: int
     admin_username: str
+    members: list[MemberResponse]
     created_at: Optional[datetime]
 
 class LeaveGroupRequest(BaseModel):

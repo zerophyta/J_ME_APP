@@ -36,3 +36,7 @@ class User(Base):
      # new relationships for broadcast system
     broadcasts = relationship("Broadcast", back_populates="sender")
     received_broadcasts = relationship("BroadcastRecipient", back_populates="recipient")
+    
+    # relationships
+    calls_made = relationship("CallSession", foreign_keys="[CallSession.caller_id]", back_populates="caller")
+    calls_received = relationship("CallSession", foreign_keys="[CallSession.callee_id]", back_populates="callee")

@@ -4,7 +4,7 @@ from app.database import SessionLocal
 from app.models.group_member import GroupMember
 from app.models.group import Group
 from app.models.user import User
-from app.schemas.group_schema import GroupCreate, GroupResponse, DeleteGroupRequest, LeaveGroupRequest, JoinGroupRequest
+from app.schemas.group_schema import GroupCreate,MemberResponse, GroupResponse, DeleteGroupRequest, LeaveGroupRequest, JoinGroupRequest
 from datetime import datetime
 
 router = APIRouter(prefix="/groups", tags=["Groups"])
@@ -124,7 +124,6 @@ def delete_group(request: DeleteGroupRequest, db: Session = Depends(get_db)):
     if group.admin_id != request.admin_id:
         raise HTTPException(status_code=403, detail="Only admin can delete group")
 
-    # count members
     members = db.query(GroupMember).filter(GroupMember.group_id == request.group_id).all()
     member_count = len(members)
 
@@ -134,34 +133,125 @@ def delete_group(request: DeleteGroupRequest, db: Session = Depends(get_db)):
         db.commit()
         return {"status": "success", "message": f"Group '{group.name}' deleted by admin"}
 
-    # case 2: admin wants to transfer ownership
+    # case 2: admin wants to remove all members then delete
+    if request.remove_all_members:
+        for m in members:
+            if m.user_id != request.admin_id:
+                db.delete(m)
+        db.delete(group)
+        db.commit()
+        return {"status": "success", "message": f"Group '{group.name}' deleted after removing all members"}
+
+    # case 3: admin wants to transfer ownership
     if request.transfer_to_user_id:
         new_admin = db.query(User).filter(User.id == request.transfer_to_user_id).first()
         if not new_admin:
             raise HTTPException(status_code=404, detail="New admin user not found")
 
+        # check kama new_admin ni member wa group
+        member = db.query(GroupMember).filter(
+            GroupMember.group_id == request.group_id,
+            GroupMember.user_id == new_admin.id
+        ).first()
+        if not member:
+            raise HTTPException(status_code=400, detail="New admin must be a group member")
+
         group.admin_id = new_admin.id
         db.commit()
         return {"status": "success", "message": f"Admin transferred group '{group.name}' to {new_admin.username}"}
 
-    # case 3: admin must remove all members first
-    raise HTTPException(
-        status_code=400,
-        detail="Group has other members. Remove them or transfer admin before deleting."
-    )
+    raise HTTPException(status_code=400, detail="Invalid delete request")
+
+@router.post("/{group_id}/remove_member")
+def remove_member(group_id: int, admin_id: int, member_id: int, db: Session = Depends(get_db)):
+    group = db.query(Group).filter(Group.id == group_id).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    if group.admin_id != admin_id:
+        raise HTTPException(status_code=403, detail="Only admin can remove members")
+
+    member = db.query(GroupMember).filter(GroupMember.group_id == group_id, GroupMember.user_id == member_id).first()
+    if not member:
+        raise HTTPException(status_code=404, detail="Member not found in group")
+
+    db.delete(member)
+    db.commit()
+    return {"status": "success", "message": f"Member {member_id} removed from group '{group.name}'"}
+
+
+@router.post("/{group_id}/assign_admin")
+def assign_admin(group_id: int, admin_id: int, new_admin_id: int, db: Session = Depends(get_db)):
+    group = db.query(Group).filter(Group.id == group_id).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    if group.admin_id != admin_id:
+        raise HTTPException(status_code=403, detail="Only current admin can assign new admin")
+
+    member = db.query(GroupMember).filter(GroupMember.group_id == group_id, GroupMember.user_id == new_admin_id).first()
+    if not member:
+        raise HTTPException(status_code=404, detail="New admin must be a group member")
+
+    group.admin_id = new_admin_id
+    db.commit()
+    return {"status": "success", "message": f"New admin {new_admin_id} assigned for group '{group.name}'"}
+
 
 @router.get("/", response_model=list[GroupResponse])
 def get_groups(db: Session = Depends(get_db)):
     groups = db.query(Group).all()
     response = []
+
     for g in groups:
+        # admin info
         admin = db.query(User).filter(User.id == g.admin_id).first()
+
+        # members info
+        members = db.query(GroupMember).filter(GroupMember.group_id == g.id).all()
+        member_list = []
+        for m in members:
+            u = db.query(User).filter(User.id == m.user_id).first()
+            if u:
+                member_list.append({
+                    "id": u.id,
+                    "username": u.username
+                })
+
         response.append({
             "id": g.id,
             "name": g.name,
             "admin_id": g.admin_id,
             "admin_username": admin.username if admin else "Unknown",
-            "created_at": datetime.utcnow()
+            "members": member_list,
+            "created_at": g.created_at if hasattr(g, "created_at") else datetime.utcnow()
         })
+
+@router.get("/{group_id}", response_model=GroupResponse)
+def get_group(group_id: int, db: Session = Depends(get_db)):
+    group = db.query(Group).filter(Group.id == group_id).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    # admin info
+    admin = db.query(User).filter(User.id == group.admin_id).first()
+
+    # members info
+    members = db.query(GroupMember).filter(GroupMember.group_id == group.id).all()
+    member_list = []
+    for m in members:
+        u = db.query(User).filter(User.id == m.user_id).first()
+        if u:
+            member_list.append(MemberResponse(id=u.id, username=u.username))
+
+    return GroupResponse(
+        id=group.id,
+        name=group.name,
+        admin_id=group.admin_id,
+        admin_username=admin.username if admin else "Unknown",
+        members=member_list,
+        created_at=group.created_at
+    )
+
     return response
 
