@@ -34,6 +34,16 @@ class DeleteGroupRequest(BaseModel):
     admin_id: int
     transfer_to_user_id: int | None = None  # optional kama admin anataka kumkabidhi mtu mwingine
 
+class RemoveMemberRequest(BaseModel):
+    group_id: int
+    admin_id: int
+    member_id: int   # member anayefutwa
+
+class AssignAdminRequest(BaseModel):
+    group_id: int
+    admin_id: int        # current admin
+    new_admin_id: int    # member anayechaguliwa kuwa admin mpya
+
     class Config:
         orm_mode = True
 
