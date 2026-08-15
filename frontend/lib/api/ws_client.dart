@@ -6,8 +6,8 @@ class WsClient {
 
   void connect({required int userId}) {
     _channel = WebSocketChannel.connect(
-      Uri.parse("ws://127.0.0.1:8000/ws/connect?user_id=$userId"),
-    );
+       Uri.parse("ws://127.0.0.1:8000/ws/call/$userId"),
+);
   }
 
   Stream<dynamic> get stream =>

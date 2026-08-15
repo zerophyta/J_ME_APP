@@ -352,12 +352,7 @@ Future<bool> unblockUser(int userId) async {
       headers: _headers(auth: true));
   return res.statusCode == 200;
 }
-Future<List<dynamic>> getSecretMessages(int chatId) async {
-  await loadToken();
-  final res = await http.get(Uri.parse("$baseUrl/secret_chat/$chatId"),
-      headers: _headers(auth: true));
-  return jsonDecode(res.body);
-}
+
 
 Future<bool> sendSecretMessage(int chatId, int userId, String content, [int destructSeconds = 0]) async {
   await loadToken();
