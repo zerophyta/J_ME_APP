@@ -107,15 +107,7 @@ class ApiClient {
     return jsonDecode(res.body);
   }
 
-  // 📎 Upload media
-  // 🔒 Set privacy
-  Future<Map<String, dynamic>> setPrivacy(
-      int userId, String setting, String value) async {
-    final body = jsonEncode({"user_id": userId, "setting": setting, "value": value});
-    final res = await http.post(Uri.parse("$baseUrl/privacy/"),
-        headers: _headers(auth: true), body: body);
-    return jsonDecode(res.body);
-  }
+
 
   // 🔑 Create secret chat
   Future<Map<String, dynamic>> createSecretChat(
