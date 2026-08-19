@@ -107,9 +107,9 @@ class ApiClient {
     return jsonDecode(res.body);
   }
 
-  // 📎 Upload media
-  // 🔒 Set privacy
-  Future<Map<String, dynamic>> setPrivacy(
+  
+  // 🔒 Settings
+  Future<Map<String, dynamic>> settings(
       int userId, String setting, String value) async {
     final body = jsonEncode({"user_id": userId, "setting": setting, "value": value});
     final res = await http.post(Uri.parse("$baseUrl/privacy/"),
