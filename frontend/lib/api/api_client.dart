@@ -127,26 +127,7 @@ class ApiClient {
     return jsonDecode(res.body);
   }
 
-  Future<bool> setPrivacy(bool lastSeen, bool profilePhoto, bool readReceipts) async {
-  await loadToken();
-  final body = jsonEncode({
-    "last_seen_visible": lastSeen,
-    "profile_photo_visible": profilePhoto,
-    "read_receipts_enabled": readReceipts,
-  });
-  final res = await http.post(Uri.parse("$baseUrl/privacy/set"),
-      headers: _headers(auth: true), body: body);
-  return res.statusCode == 200;
- }
- 
-Future<List<dynamic>> getSecretMessages(int chatId) async {
-  await loadToken();
-  final res = await http.get(Uri.parse("$baseUrl/secret_chat/$chatId"),
-      headers: _headers(auth: true));
-  return jsonDecode(res.body);
-}
-
-Future<bool> setSettings(bool notifications, bool darkTheme, String username) async {
+  Future<bool> setSettings(bool notifications, bool darkTheme, String username) async {
   await loadToken();
   final body = jsonEncode({
     "notifications_enabled": notifications,
@@ -352,7 +333,6 @@ Future<bool> unblockUser(int userId) async {
       headers: _headers(auth: true));
   return res.statusCode == 200;
 }
-
 
 Future<bool> sendSecretMessage(int chatId, int userId, String content, [int destructSeconds = 0]) async {
   await loadToken();

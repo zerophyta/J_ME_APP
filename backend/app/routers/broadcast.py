@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from datetime import datetime
 from app.database import SessionLocal
 from app.models import Broadcast, BroadcastRecipient, User, ChatMember
-from app.schemas import BroadcastRequest
 from app.models.chat import Chat
 from app.models.secret_chat import SecretChat
+from app.models.message import Message   # ✅ ongeza hii
+from app.schemas import BroadcastRequest
 
 router = APIRouter()
 
@@ -30,8 +32,9 @@ def send_broadcast(request: BroadcastRequest, db: Session = Depends(get_db)):
     # check kama recipients wako kwenye chat moja na sender (group OR normal OR secret)
     for rid in request.recipient_ids:
         in_group = db.query(ChatMember).filter(
-            ChatMember.user_id == sender.id,
-            ChatMember.chat_id == ChatMember.chat_id,
+            ChatMember.chat_id.in_(
+                db.query(ChatMember.chat_id).filter(ChatMember.user_id == sender.id)
+            ),
             ChatMember.user_id == rid
         ).first()
 
@@ -48,16 +51,24 @@ def send_broadcast(request: BroadcastRequest, db: Session = Depends(get_db)):
         if not (in_group or in_normal or in_secret):
             raise HTTPException(status_code=400, detail=f"Recipient {rid} not in same chat/secret_chat with sender")
 
-    # create broadcast
+    # create broadcast record
     broadcast = Broadcast(sender_id=request.sender_id, content=request.content)
     db.add(broadcast)
     db.commit()
     db.refresh(broadcast)
 
-    # add recipients
+    # add recipients + insert into inbox (Message table)
     for rid in request.recipient_ids:
         br = BroadcastRecipient(broadcast_id=broadcast.id, recipient_id=rid)
         db.add(br)
+
+        msg = Message(
+            sender_id=request.sender_id,
+            receiver_id=rid,
+            content=request.content,
+            timestamp=datetime.utcnow()
+        )
+        db.add(msg)
 
     db.commit()
 
@@ -72,3 +83,4 @@ def send_broadcast(request: BroadcastRequest, db: Session = Depends(get_db)):
         },
         "recipients": [{"id": r.id, "username": r.username} for r in recipients]
     }
+
