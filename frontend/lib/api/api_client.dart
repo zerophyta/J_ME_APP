@@ -31,16 +31,13 @@ class ApiClient {
 
   Future<bool> uploadMedia(int chatId, int senderId, File file, String fileType) async {
     await loadToken();
-    var request = http.MultipartRequest(
-      "POST",
-      Uri.parse("$baseUrl/media/upload"),
-    );
-    request.headers.addAll(_headers(auth: true));
-    request.fields["message_id"] = chatId.toString();
-    request.fields["file_type"] = fileType;
-    request.files.add(await http.MultipartFile.fromPath("file", file.path));
-
-    var response = await request.send();
+    final body = jsonEncode({
+      "message_id": chatId,
+      "file_url": file.path,
+      "file_type": fileType,
+    });
+    final response = await http.post(Uri.parse("$baseUrl/media/"),
+        headers: _headers(auth: true), body: body);
     return response.statusCode == 200;
   }
 
@@ -61,14 +58,18 @@ class ApiClient {
       "password": password,
       "avatar": avatar
     });
-    final res = await http.post(Uri.parse("$baseUrl/users/"),
+    final res = await http.post(Uri.parse("$baseUrl/auth/register"),
         headers: _headers(), body: body);
-    return jsonDecode(res.body);
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    return {
+      ...data,
+      "success": res.statusCode >= 200 && res.statusCode < 300,
+    };
   }
 
   // 🔐 Login
   Future<bool> login(String email, String password) async {
-    final body = jsonEncode({"email": email, "password": password});
+    final body = jsonEncode({"identifier": email, "password": password});
     final res = await http.post(Uri.parse("$baseUrl/auth/login"),
         headers: _headers(), body: body);
     if (res.statusCode == 200) {
@@ -84,9 +85,13 @@ class ApiClient {
 
   // 💬 Send message
   Future<Map<String, dynamic>> sendMessage(
-      int chatId, int senderId, String content) async {
-    final body =
-        jsonEncode({"chat_id": chatId, "sender_id": senderId, "content": content});
+      int chatId, int senderId, String content, {int? receiverId}) async {
+    final body = jsonEncode({
+      "chat_id": chatId,
+      "sender_id": senderId,
+      "receiver_id": receiverId,
+      "content": content,
+    });
     final res = await http.post(Uri.parse("$baseUrl/messages/"),
         headers: _headers(auth: true), body: body);
     return jsonDecode(res.body);
@@ -94,7 +99,15 @@ class ApiClient {
 
   // 📥 Get messages
   Future<List<dynamic>> getMessages(int chatId) async {
-    final res = await http.get(Uri.parse("$baseUrl/messages/$chatId"),
+    final res = await http.get(Uri.parse("$baseUrl/messages/?chat_id=$chatId"),
+        headers: _headers(auth: true));
+    return jsonDecode(res.body);
+  }
+
+  Future<List<dynamic>> getSecretMessages(int secretChatId) async {
+    await loadToken();
+    final res = await http.get(
+        Uri.parse("$baseUrl/messages/?secret_chat_id=$secretChatId"),
         headers: _headers(auth: true));
     return jsonDecode(res.body);
   }
@@ -107,6 +120,7 @@ class ApiClient {
     return jsonDecode(res.body);
   }
 
+<<<<<<< HEAD
   
   // 🔒 Settings
   Future<Map<String, dynamic>> settings(
@@ -116,6 +130,9 @@ class ApiClient {
         headers: _headers(auth: true), body: body);
     return jsonDecode(res.body);
   }
+=======
+
+>>>>>>> cbb6e9a07df2e223400bfb0f1d261ea30811cd7c
 
   // 🔑 Create secret chat
   Future<Map<String, dynamic>> createSecretChat(
@@ -127,26 +144,7 @@ class ApiClient {
     return jsonDecode(res.body);
   }
 
-  Future<bool> setPrivacy(bool lastSeen, bool profilePhoto, bool readReceipts) async {
-  await loadToken();
-  final body = jsonEncode({
-    "last_seen_visible": lastSeen,
-    "profile_photo_visible": profilePhoto,
-    "read_receipts_enabled": readReceipts,
-  });
-  final res = await http.post(Uri.parse("$baseUrl/privacy/set"),
-      headers: _headers(auth: true), body: body);
-  return res.statusCode == 200;
- }
- 
-Future<List<dynamic>> getSecretMessages(int chatId) async {
-  await loadToken();
-  final res = await http.get(Uri.parse("$baseUrl/secret_chat/$chatId"),
-      headers: _headers(auth: true));
-  return jsonDecode(res.body);
-}
-
-Future<bool> setSettings(bool notifications, bool darkTheme, String username) async {
+  Future<bool> setSettings(bool notifications, bool darkTheme, String username) async {
   await loadToken();
   final body = jsonEncode({
     "notifications_enabled": notifications,
@@ -352,7 +350,6 @@ Future<bool> unblockUser(int userId) async {
       headers: _headers(auth: true));
   return res.statusCode == 200;
 }
-
 
 Future<bool> sendSecretMessage(int chatId, int userId, String content, [int destructSeconds = 0]) async {
   await loadToken();

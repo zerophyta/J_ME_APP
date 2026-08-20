@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 
 // Screens
 import 'screens/login_history_screen.dart';
@@ -16,6 +17,12 @@ import 'screens/group_list_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/call_screen.dart';
 import 'screens/broadcast_screen.dart';
+=======
+import 'routes/auth_routes.dart';
+import 'routes/settings_routes.dart';
+import 'routes/chat_routes.dart';
+import 'routes/status_routes.dart';
+>>>>>>> cbb6e9a07df2e223400bfb0f1d261ea30811cd7c
 
 void main() {
   runApp(const JMeApp());
@@ -30,17 +37,15 @@ class JMeApp extends StatelessWidget {
       title: 'J_ME',
       theme: ThemeData(
         brightness: Brightness.dark,
-        primaryColor: const Color(0xFF0A1A2F), // dark blue
+        primaryColor: const Color(0xFF0A1A2F),
         scaffoldBackgroundColor: const Color(0xFF0A1A2F),
-        colorScheme: ColorScheme.fromSwatch().copyWith(
-          secondary: const Color(0xFFD4AF37), // gold accent
-        ),
+        colorScheme: ColorScheme.fromSwatch(brightness: Brightness.dark)
+            .copyWith(secondary: const Color(0xFFD4AF37)),
       ),
-
-      
       initialRoute: '/',
       routes: {
         '/': (context) => const HomeScreen(),
+<<<<<<< HEAD
         '/login_history': (context) => const LoginHistoryScreen(),
         '/privacy_settings': (context) => const PrivacySettingsScreen(),
         '/advanced_privacy': (context) => const AdvancedPrivacyScreen(),
@@ -60,6 +65,12 @@ class JMeApp extends StatelessWidget {
         '/profile': (context) => const ProfileScreen(userId: 1),
         '/calls': (context) => const CallScreen(userId: 1),
         '/broadcast': (context) => const BroadcastScreen(senderId: 1),
+=======
+        ...authRoutes,
+        ...settingsRoutes,
+        ...chatRoutes,
+        ...statusRoutes,
+>>>>>>> cbb6e9a07df2e223400bfb0f1d261ea30811cd7c
       },
     );
   }
@@ -71,6 +82,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
+<<<<<<< HEAD
       {"title": "Login History", "route": "/login_history"},
       {"title": "Privacy Settings", "route": "/privacy_settings"},
       {"title": "Advanced Privacy", "route": "/advanced_privacy"},
@@ -86,6 +98,13 @@ class HomeScreen extends StatelessWidget {
       {"title": "Profile", "route": "/profile"},
       {"title": "Calls", "route": "/calls"},
       {"title": "Broadcast", "route": "/broadcast"},
+=======
+      {"title": "Login", "route": "/login"},
+      {"title": "Signup", "route": "/signup"},
+      {"title": "Settings", "route": "/settings"},
+      {"title": "Chat", "route": "/chat"},
+      {"title": "Status", "route": "/status"},
+>>>>>>> cbb6e9a07df2e223400bfb0f1d261ea30811cd7c
     ];
 
     return Scaffold(

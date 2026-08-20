@@ -1,5 +1,5 @@
-name: j_me_app
-description: A new Flutter project for testing J_ME_APP
+name: J_me
+description: A messaging app for J & ME.
 publish_to: "none" # usipange ku-publish kwenye pub.dev
 
 version: 1.0.0+1
