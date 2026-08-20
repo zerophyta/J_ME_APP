@@ -14,8 +14,11 @@ class DashboardScreen extends StatelessWidget {
         crossAxisCount: 2,
         padding: const EdgeInsets.all(16),
         children: [
-          _buildCard(context, "Chats", Icons.chat, "/chat"),
-          _buildCard(context, "Groups", Icons.group, "/group"),
+          _buildCard(context, "Chats", Icons.chat, "/chats"),
+          _buildCard(context, "Groups", Icons.group, "/groups"),
+          _buildCard(context, "Profile", Icons.person, "/profile"),
+          _buildCard(context, "Calls", Icons.call, "/calls"),
+          _buildCard(context, "Broadcast", Icons.campaign, "/broadcast"),
           _buildCard(context, "Status", Icons.circle, "/media"),
           _buildCard(context, "Privacy", Icons.lock, "/privacy"),
           _buildCard(context, "Secret Chat", Icons.shield, "/secret"),

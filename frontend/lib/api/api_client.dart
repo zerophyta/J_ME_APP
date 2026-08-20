@@ -464,6 +464,63 @@ Future<List<dynamic>> getChats() async {
   return jsonDecode(res.body);
 }
 
+Future<Map<String, dynamic>> startChat(String identifier, int currentUserId) async {
+  await loadToken();
+  final uri = Uri.parse("$baseUrl/chats/start").replace(queryParameters: {
+    "identifier": identifier,
+    "current_user_id": currentUserId.toString(),
+  });
+  final res = await http.post(uri, headers: _headers(auth: true));
+  return jsonDecode(res.body);
+}
+
+Future<List<dynamic>> getGroups() async {
+  await loadToken();
+  final res = await http.get(Uri.parse("$baseUrl/groups/"), headers: _headers(auth: true));
+  return jsonDecode(res.body);
+}
+
+Future<Map<String, dynamic>> getUser(int userId) async {
+  await loadToken();
+  final res = await http.get(Uri.parse("$baseUrl/users/$userId"), headers: _headers(auth: true));
+  return jsonDecode(res.body);
+}
+
+Future<Map<String, dynamic>> updateUser(int userId, Map<String, dynamic> values) async {
+  await loadToken();
+  final res = await http.put(Uri.parse("$baseUrl/users/$userId"),
+      headers: _headers(auth: true), body: jsonEncode(values));
+  return jsonDecode(res.body);
+}
+
+Future<Map<String, dynamic>> startCall(int callerId, int calleeId, String callType) async {
+  await loadToken();
+  final res = await http.post(Uri.parse("$baseUrl/calls/start"),
+      headers: _headers(auth: true),
+      body: jsonEncode({"caller_id": callerId, "callee_id": calleeId, "call_type": callType}));
+  return jsonDecode(res.body);
+}
+
+Future<List<dynamic>> getCallHistory(int userId) async {
+  await loadToken();
+  final res = await http.get(Uri.parse("$baseUrl/calls/history/$userId"), headers: _headers(auth: true));
+  return jsonDecode(res.body);
+}
+
+Future<Map<String, dynamic>> endCall(int callId) async {
+  await loadToken();
+  final res = await http.post(Uri.parse("$baseUrl/calls/$callId/end"), headers: _headers(auth: true));
+  return jsonDecode(res.body);
+}
+
+Future<Map<String, dynamic>> sendBroadcast(int senderId, String content, List<int> recipientIds) async {
+  await loadToken();
+  final res = await http.post(Uri.parse("$baseUrl/broadcasts/broadcast"),
+      headers: _headers(auth: true),
+      body: jsonEncode({"sender_id": senderId, "content": content, "recipient_ids": recipientIds}));
+  return jsonDecode(res.body);
+}
+
 Future<bool> forwardMessage(int messageId, List<int> chatIds) async {
   await loadToken();
   final body = jsonEncode({"message_id": messageId, "chat_ids": chatIds});

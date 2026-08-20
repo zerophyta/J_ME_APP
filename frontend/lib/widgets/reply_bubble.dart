@@ -11,7 +11,7 @@ class ReplyBubble extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 6),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.85),
+        color: Colors.black.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(

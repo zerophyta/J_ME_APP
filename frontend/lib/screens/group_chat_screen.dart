@@ -91,7 +91,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
           if (typingUser != null)
             Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Text("User ${typingUser} is typing..."),
+              child: Text("User $typingUser is typing..."),
             ),
           Row(
             children: [

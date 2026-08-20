@@ -11,6 +11,11 @@ import 'screens/disappearing_messages_screen.dart';
 import 'screens/message_editing_screen.dart';
 import 'screens/message_deletion_screen.dart';
 import 'screens/forward_message_screen.dart';
+import 'screens/chat_list_screen.dart';
+import 'screens/group_list_screen.dart';
+import 'screens/profile_screen.dart';
+import 'screens/call_screen.dart';
+import 'screens/broadcast_screen.dart';
 
 void main() {
   runApp(const JMeApp());
@@ -50,6 +55,11 @@ class JMeApp extends StatelessWidget {
         ),
         '/message_deletion': (context) => const MessageDeletionScreen(chatId: 1, messageId: 44),
         '/forward_message': (context) => const ForwardMessageScreen(messageId: 44),
+        '/chats': (context) => const ChatListScreen(),
+        '/groups': (context) => const GroupListScreen(),
+        '/profile': (context) => const ProfileScreen(userId: 1),
+        '/calls': (context) => const CallScreen(userId: 1),
+        '/broadcast': (context) => const BroadcastScreen(senderId: 1),
       },
     );
   }
@@ -71,6 +81,11 @@ class HomeScreen extends StatelessWidget {
       {"title": "Message Editing", "route": "/message_editing"},
       {"title": "Message Deletion", "route": "/message_deletion"},
       {"title": "Forward Message", "route": "/forward_message"},
+      {"title": "Chats", "route": "/chats"},
+      {"title": "Groups", "route": "/groups"},
+      {"title": "Profile", "route": "/profile"},
+      {"title": "Calls", "route": "/calls"},
+      {"title": "Broadcast", "route": "/broadcast"},
     ];
 
     return Scaffold(

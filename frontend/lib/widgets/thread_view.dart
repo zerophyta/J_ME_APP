@@ -9,7 +9,7 @@ class ThreadView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 350,
-      color: Colors.black.withOpacity(0.85),
+      color: Colors.black.withValues(alpha: 0.85),
       child: Column(
         children: [
           Container(
