@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
+from pydantic import BaseModel
 
 from app.schemas.user_schema import UserRegister   
 from app.config import ADMIN_PASSWORD, ADMIN_USERNAME
@@ -15,6 +16,10 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+class LoginRequest(BaseModel):
+    identifier: str
+    password: str
+
 def get_db():
     db = SessionLocal()
     try:
@@ -23,7 +28,9 @@ def get_db():
         db.close()
 
 @router.post("/login")
-def login(identifier: str, password: str, db: Session = Depends(get_db)):
+def login(credentials: LoginRequest, db: Session = Depends(get_db)):
+    identifier = credentials.identifier
+    password = credentials.password
 
     # check admin login
     if identifier == ADMIN_USERNAME and password == ADMIN_PASSWORD:
