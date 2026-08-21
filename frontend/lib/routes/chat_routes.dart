@@ -9,13 +9,18 @@ import '../screens/forward_message_screen.dart';
 
 final Map<String, WidgetBuilder> chatRoutes = {
   '/chat': (context) => const ChatScreen(),
-  '/group_chat': (context) => const GroupChatScreen(),
+  '/group_chat': (context) => const GroupChatScreen(
+        groupId: 1,
+        userId: 1,
+        members: [1],
+      ),
   '/secret_chat': (context) => const SecretChatScreen(chatId: 1, userId: 1),
   '/message_editing': (context) => const MessageEditingScreen(
         chatId: 1,
         messageId: 44,
         originalText: "Hello team!",
       ),
-  '/message_deletion': (context) => const MessageDeletionScreen(chatId: 1, messageId: 44),
+  '/message_deletion': (context) =>
+      const MessageDeletionScreen(chatId: 1, messageId: 44),
   '/forward_message': (context) => const ForwardMessageScreen(messageId: 44),
 };

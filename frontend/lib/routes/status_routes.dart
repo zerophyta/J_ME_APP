@@ -8,6 +8,6 @@ import '../screens/status_archive_screen.dart';
 final Map<String, WidgetBuilder> statusRoutes = {
   '/status': (context) => const StatusScreen(),
   '/status_upload': (context) => const StatusUploadScreen(),
-  '/status_viewer': (context) => const StatusViewerScreen(),
+  '/status_viewer': (context) => const StatusViewerScreen(status: {'id': 1}),
   '/status_archive': (context) => const StatusArchiveScreen(),
 };

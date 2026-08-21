@@ -119,8 +119,6 @@ class ApiClient {
         headers: _headers(auth: true), body: body);
     return jsonDecode(res.body);
   }
-
-<<<<<<< HEAD
   
   // 🔒 Settings
   Future<Map<String, dynamic>> settings(
@@ -130,9 +128,32 @@ class ApiClient {
         headers: _headers(auth: true), body: body);
     return jsonDecode(res.body);
   }
-=======
 
->>>>>>> cbb6e9a07df2e223400bfb0f1d261ea30811cd7c
+  Future<bool> setPrivacy(
+      bool lastSeenVisible, bool profilePhotoVisible, bool readReceiptsEnabled,
+      {int userId = 1}) async {
+    await loadToken();
+    final settings = {
+      "last_seen": lastSeenVisible,
+      "profile_photo": profilePhotoVisible,
+      "read_receipts": readReceiptsEnabled,
+    };
+    for (final entry in settings.entries) {
+      final response = await http.post(
+        Uri.parse("$baseUrl/privacy/"),
+        headers: _headers(auth: true),
+        body: jsonEncode({
+          "user_id": userId,
+          "setting": entry.key,
+          "value": entry.value.toString(),
+        }),
+      );
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   // 🔑 Create secret chat
   Future<Map<String, dynamic>> createSecretChat(
@@ -510,11 +531,63 @@ Future<Map<String, dynamic>> endCall(int callId) async {
   return jsonDecode(res.body);
 }
 
+Future<Map<String, dynamic>> startGroupCall(int callerId, int chatId, String callType) async {
+  await loadToken();
+  final res = await http.post(Uri.parse("$baseUrl/group_calls/start"),
+      headers: _headers(auth: true),
+      body: jsonEncode({"caller_id": callerId, "chat_id": chatId, "call_type": callType}));
+  return jsonDecode(res.body);
+}
+
+Future<Map<String, dynamic>> joinGroupCall(int callId, int userId) async {
+  await loadToken();
+  final uri = Uri.parse("$baseUrl/group_calls/$callId/join").replace(
+      queryParameters: {"user_id": userId.toString()});
+  final res = await http.post(uri, headers: _headers(auth: true));
+  return jsonDecode(res.body);
+}
+
+Future<Map<String, dynamic>> leaveGroupCall(int callId, int userId) async {
+  await loadToken();
+  final uri = Uri.parse("$baseUrl/group_calls/$callId/leave").replace(
+      queryParameters: {"user_id": userId.toString()});
+  final res = await http.post(uri, headers: _headers(auth: true));
+  return jsonDecode(res.body);
+}
+
+Future<Map<String, dynamic>> endGroupCall(int callId, int userId) async {
+  await loadToken();
+  final uri = Uri.parse("$baseUrl/group_calls/$callId/end").replace(
+      queryParameters: {"user_id": userId.toString()});
+  final res = await http.post(uri, headers: _headers(auth: true));
+  return jsonDecode(res.body);
+}
+
 Future<Map<String, dynamic>> sendBroadcast(int senderId, String content, List<int> recipientIds) async {
   await loadToken();
   final res = await http.post(Uri.parse("$baseUrl/broadcasts/broadcast"),
       headers: _headers(auth: true),
       body: jsonEncode({"sender_id": senderId, "content": content, "recipient_ids": recipientIds}));
+  return jsonDecode(res.body);
+}
+
+Future<List<dynamic>> getAdminUsers() async {
+  await loadToken();
+  final res = await http.get(Uri.parse("$baseUrl/admin/users"), headers: _headers(auth: true));
+  return jsonDecode(res.body);
+}
+
+Future<Map<String, dynamic>> adminBroadcast(String content) async {
+  await loadToken();
+  final res = await http.post(Uri.parse("$baseUrl/admin/broadcast"),
+      headers: _headers(auth: true), body: jsonEncode({"content": content}));
+  return jsonDecode(res.body);
+}
+
+Future<Map<String, dynamic>> notifyUser(int userId, String content) async {
+  await loadToken();
+  final res = await http.post(Uri.parse("$baseUrl/admin/notify/$userId"),
+      headers: _headers(auth: true), body: jsonEncode({"content": content}));
   return jsonDecode(res.body);
 }
 
