@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import '../api/api_client.dart';
-import '../api/ws_client.dart';
 
 class SecretChatScreen extends StatefulWidget {
   final int chatId;
   final int userId;
 
-  const SecretChatScreen({super.key, required this.chatId, required this.userId});
+  const SecretChatScreen(
+      {super.key, required this.chatId, required this.userId});
 
   @override
   State<SecretChatScreen> createState() => _SecretChatScreenState();
@@ -14,7 +14,6 @@ class SecretChatScreen extends StatefulWidget {
 
 class _SecretChatScreenState extends State<SecretChatScreen> {
   final ApiClient api = ApiClient();
-  final WsClient ws = WsClient();
   final messageController = TextEditingController();
 
   List<dynamic> messages = [];
@@ -24,23 +23,6 @@ class _SecretChatScreenState extends State<SecretChatScreen> {
   @override
   void initState() {
     super.initState();
-    ws.connect(userId: widget.userId);
-
-    ws.stream.listen((event) {
-      if (event["type"] == "secret:new_message") {
-        setState(() {
-          messages.add(event);
-        });
-        if (selfDestructSeconds != null && selfDestructSeconds! > 0) {
-          Future.delayed(Duration(seconds: selfDestructSeconds!), () {
-            setState(() {
-              messages.remove(event);
-            });
-          });
-        }
-      }
-    });
-
     _loadMessages();
   }
 
@@ -63,12 +45,6 @@ class _SecretChatScreenState extends State<SecretChatScreen> {
     );
 
     if (success) {
-      ws.send({
-        "type": "secret:new_message",
-        "chat_id": widget.chatId,
-        "sender_id": widget.userId,
-        "content": trimmedText,
-      });
       _loadMessages();
       setState(() {
         message = "Message sent ✅";
@@ -83,7 +59,6 @@ class _SecretChatScreenState extends State<SecretChatScreen> {
 
   @override
   void dispose() {
-    ws.dispose();
     messageController.dispose();
     super.dispose();
   }
@@ -129,7 +104,8 @@ class _SecretChatScreenState extends State<SecretChatScreen> {
                 Expanded(
                   child: TextField(
                     controller: messageController,
-                    decoration: const InputDecoration(hintText: "Type secret message..."),
+                    decoration: const InputDecoration(
+                        hintText: "Type secret message..."),
                   ),
                 ),
                 IconButton(

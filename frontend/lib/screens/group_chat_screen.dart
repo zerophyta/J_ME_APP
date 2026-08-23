@@ -29,11 +29,11 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   @override
   void initState() {
     super.initState();
-    ws.connect(userId: widget.userId);
+    ws.connectChat(chatId: widget.groupId);
 
     // Listen to WebSocket events
     ws.stream.listen((event) {
-      if (event["type"] == "group:new_message") {
+      if (event["chat_id"] == widget.groupId) {
         setState(() {
           messages.add(event);
         });
@@ -48,15 +48,18 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   }
 
   Future<void> _loadMessages() async {
-    final data = await api.getMessages(widget.groupId);
+    final data = await api.getMessages(widget.groupId, groupId: widget.groupId);
     setState(() {
       messages = data;
     });
   }
 
   Future<void> _sendMessage() async {
-    await api.sendMessage(widget.groupId, widget.userId, messageController.text);
-    ws.sendGroupMessage(widget.groupId, widget.userId, messageController.text, widget.members);
+    final content = messageController.text.trim();
+    if (content.isEmpty) return;
+    await api.sendMessage(widget.groupId, widget.userId, content,
+        groupId: widget.groupId);
+    ws.sendGroupMessage(widget.userId, content);
     messageController.clear();
   }
 
@@ -98,7 +101,8 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
               Expanded(
                 child: TextField(
                   controller: messageController,
-                  decoration: const InputDecoration(hintText: "Type message..."),
+                  decoration:
+                      const InputDecoration(hintText: "Type message..."),
                   onChanged: (_) => _sendTyping(),
                 ),
               ),

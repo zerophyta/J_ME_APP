@@ -4,10 +4,22 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 class WsClient {
   WebSocketChannel? _channel;
 
-  void connect({required int userId}) {
+  void connectUser({required int userId}) {
     _channel = WebSocketChannel.connect(
-       Uri.parse("ws://127.0.0.1:8000/ws/call/$userId"),
-);
+      Uri.parse("ws://127.0.0.1:8000/ws/user/$userId"),
+    );
+  }
+
+  void connectChat({required int chatId}) {
+    _channel = WebSocketChannel.connect(
+      Uri.parse("ws://127.0.0.1:8000/ws/chat/$chatId"),
+    );
+  }
+
+  void connectCall({required int userId}) {
+    _channel = WebSocketChannel.connect(
+      Uri.parse("ws://127.0.0.1:8000/ws/ws/call/$userId"),
+    );
   }
 
   Stream<dynamic> get stream =>
@@ -21,21 +33,15 @@ class WsClient {
     _channel?.sink.close();
   }
 
-  void sendTyping(int chatId, int senderId) {
-  send({"type": "typing", "chat_id": chatId, "sender_id": senderId});
-}
-
-  void sendGroupMessage(int chatId, int senderId, String content, List<int> members) {
-  send({
-    "type": "group:new_message",
-    "chat_id": chatId,
-    "sender_id": senderId,
-    "content": content,
-    "group_members": members
-  });
-  
-    }
+  void sendUserMessage(int receiverId, String content) {
+    send({"receiver_id": receiverId, "content": content});
   }
 
+  void sendGroupMessage(int senderId, String content) {
+    send({"sender_id": senderId, "content": content});
+  }
 
-
+  void sendTyping(int chatId, int senderId) {
+    send({"type": "typing", "chat_id": chatId, "sender_id": senderId});
+  }
+}
