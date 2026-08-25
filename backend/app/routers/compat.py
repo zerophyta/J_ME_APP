@@ -34,6 +34,7 @@ _appearance: Dict[str, Any] = {}
 _account_security: Dict[str, Any] = {"two_factor": False, "pin_lock": False, "fingerprint": False}
 _login_history: List[Dict[str, Any]] = [{"id": 1, "device": "web", "time": "2026-08-25T12:00:00Z"}]
 _devices: List[Dict[str, Any]] = [{"id": 1, "name": "Current Device", "last_seen": "2026-08-25T12:00:00Z"}]
+_thread_replies: Dict[int, Dict[int, List[Dict[str, Any]]]] = {}
 
 
 @router.post("/secret_chat/")
@@ -268,7 +269,7 @@ def set_appearance(payload: Dict[str, Any]):
 
 @router.post("/chat/view_once")
 def send_view_once(payload: Dict[str, Any]):
-    return {"status": "success", **payload}
+    return {"status": "success", "message": "View-once media sent", **payload}
 
 
 @router.post("/chat/{chat_id}/disappearing")
@@ -303,9 +304,23 @@ def remove_reaction(chat_id: int, message_id: int, payload: Dict[str, Any]):
 
 @router.post("/chat/{chat_id}/thread/reply")
 def send_thread_reply(chat_id: int, payload: Dict[str, Any]):
-    return {"status": "success", "chat_id": chat_id, "reply": payload}
+    parent_id = payload.get("parent_id")
+    if parent_id is None:
+        raise HTTPException(status_code=400, detail="parent_id is required")
+
+    parent_id_int = int(parent_id)
+    replies = _thread_replies.setdefault(chat_id, {}).setdefault(parent_id_int, [])
+    message = {
+        "id": len(replies) + 1,
+        "chat_id": chat_id,
+        "parent_id": parent_id_int,
+        "text": payload.get("text", ""),
+        "created_at": datetime.utcnow().isoformat(),
+    }
+    replies.append(message)
+    return {"status": "success", "message": message}
 
 
 @router.get("/chat/{chat_id}/thread/{parent_id}")
 def get_thread_replies(chat_id: int, parent_id: int):
-    return [{"id": 1, "parent_id": parent_id, "chat_id": chat_id, "text": "Reply text"}]
+    return _thread_replies.get(chat_id, {}).get(parent_id, [])
