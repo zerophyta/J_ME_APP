@@ -31,30 +31,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("App Settings")),
-      body: Padding(
+      body: ListView(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            TextField(
-              decoration: const InputDecoration(labelText: "Username"),
-              onChanged: (val) => setState(() => username = val),
+        children: [
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    "Preferences",
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 18),
+                  TextField(
+                    decoration: const InputDecoration(labelText: "Username"),
+                    onChanged: (val) => setState(() => username = val),
+                  ),
+                  const SizedBox(height: 8),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text("Enable Notifications"),
+                    value: notificationsEnabled,
+                    onChanged: (val) => setState(() => notificationsEnabled = val),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text("Dark Theme"),
+                    value: darkTheme,
+                    onChanged: (val) => setState(() => darkTheme = val),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(onPressed: _saveSettings, child: const Text("Save")),
+                  const SizedBox(height: 12),
+                  Center(child: Text(message)),
+                ],
+              ),
             ),
-            SwitchListTile(
-              title: const Text("Enable Notifications"),
-              value: notificationsEnabled,
-              onChanged: (val) => setState(() => notificationsEnabled = val),
-            ),
-            SwitchListTile(
-              title: const Text("Dark Theme"),
-              value: darkTheme,
-              onChanged: (val) => setState(() => darkTheme = val),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(onPressed: _saveSettings, child: const Text("Save")),
-            Text(message)
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }

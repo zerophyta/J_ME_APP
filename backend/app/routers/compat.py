@@ -134,7 +134,7 @@ def get_statuses():
     return _statuses
 
 
-@router.post("/status/upload")
+@router.post("/status/upload", status_code=201)
 def upload_status(payload: Dict[str, Any]):
     content = payload.get("content", "")
     status = {
