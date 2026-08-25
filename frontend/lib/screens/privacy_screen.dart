@@ -17,7 +17,7 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
   String message = "";
 
   Future<void> _saveSettings() async {
-    bool success = await api.setPrivacy(
+    final success = await api.setPrivacy(
       lastSeenVisible,
       profilePhotoVisible,
       readReceiptsEnabled,

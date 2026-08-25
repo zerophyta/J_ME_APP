@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from sqlalchemy.exc import SQLAlchemyError
 from app.routers import broadcast
 from app.database import Base, engine
-from app.routers import auth, users, chats, messages, groups, media, privacy, secret_chat, realtime, admin, call_ws, broadcast, calls, group_calls
+from app.routers import auth, users, chats, messages, groups, media, privacy, secret_chat, realtime, admin, call_ws, broadcast, calls, group_calls, compat
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pathlib import Path
@@ -37,7 +37,8 @@ app.include_router(admin.router)
 app.include_router(broadcast.router, prefix="/broadcasts", tags=["Broadcasts"])
 app.include_router(call_ws.router)
 app.include_router(calls.router)
-app.include_router(group_calls.router) 
+app.include_router(group_calls.router)
+app.include_router(compat.router)
 
 @app.get("/")
 def home():

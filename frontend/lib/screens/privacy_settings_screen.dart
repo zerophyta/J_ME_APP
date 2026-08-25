@@ -17,7 +17,7 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
   String message = "";
 
   Future<void> _savePrivacy() async {
-    bool success = await api.setPrivacySettings(
+    final success = await api.setPrivacySettings(
       profileVisibility,
       lastSeenVisibility,
       statusVisibility,
@@ -28,13 +28,20 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
     });
   }
 
-  Widget _buildDropdown(String title, String value, List<String> options, Function(String) onChanged) {
+  Widget _buildDropdown(
+    String title,
+    String value,
+    List<String> options,
+    Function(String) onChanged,
+  ) {
     return ListTile(
       title: Text(title),
       trailing: DropdownButton<String>(
         value: value,
-        items: options.map((opt) => DropdownMenuItem(value: opt, child: Text(opt))).toList(),
-        onChanged: (val) => onChanged(val!),
+        items: options
+            .map((opt) => DropdownMenuItem(value: opt, child: Text(opt)))
+            .toList(),
+        onChanged: (val) => onChanged(val ?? value),
       ),
     );
   }
