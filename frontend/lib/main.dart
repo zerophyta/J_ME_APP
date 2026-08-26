@@ -10,6 +10,9 @@ import 'routes/settings_routes.dart';
 import 'routes/chat_routes.dart';
 import 'routes/status_routes.dart';
 
+const gold = Color(0xFFD4AF37);
+const blue = Color(0xFF3D8BFF);
+
 void main() {
   runApp(const JMeApp());
 }
@@ -22,8 +25,6 @@ class JMeApp extends StatelessWidget {
     const navy = Color(0xFF0A1A2F);
     const surface = Color(0xFF102844);
     const surfaceBright = Color(0xFF17395D);
-    const gold = Color(0xFFD4AF37);
-    const blue = Color(0xFF3D8BFF);
 
     return MaterialApp(
       title: 'J_ME',

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../api/api_client.dart';
 import '../api/ws_client.dart';
+import 'group_call_screen.dart';
 
 class GroupChatScreen extends StatefulWidget {
   final int groupId;
@@ -76,7 +77,21 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Group Chat")),
+      appBar: AppBar(
+        title: const Text("Group Chat"),
+        actions: [
+          IconButton(
+            tooltip: 'Start group voice call',
+            icon: const Icon(Icons.phone),
+            onPressed: () => _openGroupCall('group_voice'),
+          ),
+          IconButton(
+            tooltip: 'Start group video call',
+            icon: const Icon(Icons.videocam),
+            onPressed: () => _openGroupCall('group_video'),
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Expanded(
@@ -110,6 +125,19 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
             ],
           )
         ],
+      ),
+    );
+  }
+
+  void _openGroupCall(String callType) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => GroupCallScreen(
+          groupId: widget.groupId,
+          userId: widget.userId,
+          initialCallType: callType,
+        ),
       ),
     );
   }
