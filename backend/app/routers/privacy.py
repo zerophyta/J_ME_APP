@@ -3,8 +3,9 @@ from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models.privacy import Privacy
 from app.schemas.privacy_schema import PrivacyCreate, PrivacyResponse
+from app.dependencies import USER_SCOPE
 
-router = APIRouter(prefix="/privacy", tags=["Privacy"])
+router = APIRouter(prefix="/user/{user_id}/settings", tags=["Privacy"], dependencies=USER_SCOPE)
 
 def get_db():
     db = SessionLocal()

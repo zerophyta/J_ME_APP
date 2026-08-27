@@ -6,8 +6,9 @@ from app.models.secret_chat import SecretChat
 from app.models.user import User
 from app.schemas.chat_schema import ChatResponse
 from app.schemas.secret_chat_schema import SecretChatResponse
+from app.dependencies import USER_SCOPE
 
-router = APIRouter(prefix="/chats", tags=["Chats"])
+router = APIRouter(prefix="/user/{user_id}/chats", tags=["Chats"], dependencies=USER_SCOPE)
 
 def get_db():
     db = SessionLocal()

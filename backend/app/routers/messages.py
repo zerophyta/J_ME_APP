@@ -11,8 +11,9 @@ from app.models.secret_chat import SecretChat
 from app.models.user import User
 from app.schemas.message_schema import MessageCreate, MessageResponse
 from app.models.group import Group
+from app.dependencies import USER_SCOPE
 
-router = APIRouter(prefix="/messages", tags=["Messages"])
+router = APIRouter(prefix="/user/{user_id}/messages", tags=["Messages"], dependencies=USER_SCOPE)
 
 def get_db():
     db = SessionLocal()
@@ -107,6 +108,7 @@ def send_message(message: MessageCreate, db: Session = Depends(get_db)):
 
 @router.get("/", response_model=list[MessageResponse])
 def get_messages(
+    user_id: int,
     chat_id: Optional[int] = None,
     secret_chat_id: Optional[int] = None,
     group_id: Optional[int] = None,
@@ -131,5 +133,7 @@ def get_messages(
         return db.query(Message).filter(Message.group_id == group_id).order_by(Message.timestamp).all()
 
     else:
-        raise HTTPException(status_code=400, detail="chat_id, secret_chat_id or group_id required")
+        return db.query(Message).filter(
+            (Message.sender_id == user_id) | (Message.receiver_id == user_id)
+        ).order_by(Message.timestamp).all()
 
