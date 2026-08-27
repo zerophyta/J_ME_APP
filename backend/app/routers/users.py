@@ -6,7 +6,7 @@ from app.schemas.user_schema import UserResponse, UserUpdate
 from app.utils.password_hash import hash_password
 from app.dependencies import USER_SCOPE
 
-router = APIRouter(prefix="/user/{user_id}/profiles", tags=["Users"], dependencies=USER_SCOPE)
+router = APIRouter(prefix="/user", tags=["Users"], dependencies=USER_SCOPE)
 
 def get_db():
     db = SessionLocal()
