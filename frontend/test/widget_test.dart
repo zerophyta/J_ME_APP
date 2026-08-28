@@ -5,7 +5,7 @@ void main() {
   testWidgets('app launches to the home screen', (WidgetTester tester) async {
     await tester.pumpWidget(const JMeApp());
 
-    expect(find.text('J_ME Frontend'), findsOneWidget);
+    expect(find.text('J_ME'), findsOneWidget);
     expect(find.text('Login'), findsOneWidget);
     expect(find.text('Signup'), findsOneWidget);
   });

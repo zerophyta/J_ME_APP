@@ -10,7 +10,8 @@ class SignupScreen extends StatefulWidget {
 
 class _SignupScreenState extends State<SignupScreen> {
   final ApiClient api = ApiClient();
-  final nameController = TextEditingController();
+  final usernameController = TextEditingController();
+  final phoneController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
@@ -18,7 +19,8 @@ class _SignupScreenState extends State<SignupScreen> {
 
   Future<void> _signup() async {
   final result = await api.createUser(
-    nameController.text,
+    usernameController.text,
+    phoneController.text,
     emailController.text,
     passwordController.text,
   );
@@ -27,7 +29,7 @@ class _SignupScreenState extends State<SignupScreen> {
   bool success = result["success"] == true;
 
   setState(() {
-    message = success ? "Signup successful ✅" : "Signup failed ❌";
+    message = success ? "Signup successful " : "Signup failed ";
   });
 
   if (success) {
@@ -41,9 +43,10 @@ class _SignupScreenState extends State<SignupScreen> {
       appBar: AppBar(title: const Text("Signup")),
       body: Column(
         children: [
-          TextField(controller: nameController, decoration: const InputDecoration(hintText: "Name")),
-          TextField(controller: emailController, decoration: const InputDecoration(hintText: "Email")),
-          TextField(controller: passwordController, decoration: const InputDecoration(hintText: "Password")),
+          TextField(controller: usernameController, decoration: const InputDecoration(hintText: "Username ")),
+          TextField(controller: phoneController, decoration: const InputDecoration(hintText: "Phone Number")),
+          TextField(controller: emailController, decoration: const InputDecoration(hintText: "Email Address")),
+          TextField(controller: passwordController, decoration: const InputDecoration(hintText: "Password"), obscureText: true),
           ElevatedButton(onPressed: _signup, child: const Text("Signup")),
           Text(message), // onyesha feedback
         ],

@@ -10,17 +10,17 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final ApiClient api = ApiClient();
-  final emailController = TextEditingController();
+  final identifierController = TextEditingController();
   final passwordController = TextEditingController();
   String message = "";
 
   Future<void> _login() async {
     bool success = await api.login(
-      emailController.text,
+      identifierController.text,
       passwordController.text,
     );
     setState(() {
-      message = success ? "Login successful ✅" : "Login failed ❌";
+      message = success ? "Login successful " : "Login failed ";
     });
     if (success) {
       Navigator.pushNamed(context, "/chat");
@@ -46,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 6),
                 const Text("Sign in to continue to J_ME", style: TextStyle(color: Color(0xFFB8C8DB))),
                 const SizedBox(height: 22),
-                TextField(controller: emailController, decoration: const InputDecoration(labelText: "Email")),
+                TextField(controller: identifierController, decoration: const InputDecoration(labelText: "Username or  Email")),
                 const SizedBox(height: 12),
                 TextField(controller: passwordController, decoration: const InputDecoration(labelText: "Password"), obscureText: true),
                 const SizedBox(height: 22),
