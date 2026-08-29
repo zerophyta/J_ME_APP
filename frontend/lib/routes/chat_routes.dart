@@ -8,7 +8,11 @@ import '../screens/message_deletion_screen.dart';
 import '../screens/forward_message_screen.dart';
 
 final Map<String, WidgetBuilder> chatRoutes = {
-  '/chat': (context) => const ChatScreen(),
+  '/chat': (context) => const ChatScreen(
+        chatId: 1,
+        receiverId: 1,
+        senderId: 2,
+  ),
   '/group_chat': (context) => const GroupChatScreen(
         groupId: 1,
         userId: 1,

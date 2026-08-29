@@ -1,11 +1,15 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
+
 import '../api/api_client.dart';
 import '../api/ws_client.dart';
 
 class ChatScreen extends StatefulWidget {
   final int chatId;
   final int userId;
-  final Map<String, dynamic> receiver; // expects { "id": int, "username": String, "avatarUrl": String? }
+  final Map<String, dynamic> receiver;
 
   const ChatScreen({
     super.key,
@@ -22,6 +26,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final ApiClient api = ApiClient();
   final WsClient ws = WsClient();
   final messageController = TextEditingController();
+
   List<dynamic> messages = [];
   int? typingUser;
   bool loading = true;
@@ -29,34 +34,27 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    // Connect websocket for current user
     ws.connectUser(userId: widget.userId);
 
-    // Listen websocket events
     ws.stream.listen((event) {
       final type = event["type"];
       if (type == "direct_message") {
-        // Only add messages that belong to this chat or from this receiver
         final senderId = event["sender_id"];
         final receiverId = event["receiver_id"];
-        if (senderId == widget.receiver["id"] || receiverId == widget.receiver["id"]) {
+        if (senderId == widget.receiver["id"] ||
+            receiverId == widget.receiver["id"]) {
           setState(() => messages.add(event));
         }
       } else if (type == "typing") {
         final senderId = event["sender_id"];
         if (senderId == widget.receiver["id"]) {
-          setState(() {
-            typingUser = senderId;
-          });
-          // clear typing indicator after a short delay
+          setState(() => typingUser = senderId);
           Future.delayed(const Duration(seconds: 3), () {
             if (mounted && typingUser == senderId) {
               setState(() => typingUser = null);
             }
           });
         }
-      } else if (type == "group:new_message") {
-        // ignore group messages unless you want to show them
       }
     });
 
@@ -66,19 +64,16 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _loadMessages() async {
     setState(() => loading = true);
     try {
-      // Expect api.getMessages to accept chatId and optionally filter by participant
       final data = await api.getMessages(widget.chatId);
-      // Filter messages to/from the receiver if API returns global chat messages
       final filtered = data.where((m) {
         final sender = m["sender_id"];
         final receiver = m["receiver_id"];
-        return sender == widget.receiver["id"] || receiver == widget.receiver["id"];
+        return sender == widget.receiver["id"] ||
+            receiver == widget.receiver["id"];
       }).toList();
-      setState(() {
-        messages = filtered;
-      });
+      setState(() => messages = filtered);
     } catch (e) {
-      // handle error or show snackbar
+      // handle error
     } finally {
       setState(() => loading = false);
     }
@@ -87,20 +82,28 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _sendMessage() async {
     final content = messageController.text.trim();
     if (content.isEmpty) return;
-    // send via API
-    await api.sendMessage(widget.chatId, widget.userId, content,
-        receiverId: widget.receiver["id"]);
-    // notify via websocket
+
+    await api.sendMessage(
+      widget.chatId,
+      widget.userId,
+      content,
+      receiverId: widget.receiver["id"],
+    );
+
     ws.sendUserMessage(widget.receiver["id"], content);
     messageController.clear();
     await _loadMessages();
   }
 
-  @override
-  void dispose() {
-    ws.dispose();
-    messageController.dispose();
-    super.dispose();
+  Future<void> _sendAttachment(File file) async {
+    await api.sendAttachment(
+      widget.chatId,
+      widget.userId,
+      file,
+      receiverId: widget.receiver["id"],
+    );
+    ws.sendUserAttachment(widget.receiver["id"], file.path);
+    await _loadMessages();
   }
 
   Widget _buildMessageTile(dynamic msg) {
@@ -124,7 +127,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              msg["created_at"] ?? '',
+              msg["created_at"]?.toString() ?? '',
               style: TextStyle(
                 fontSize: 10,
                 color: isMe ? Colors.white70 : Colors.black45,
@@ -137,8 +140,16 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   @override
+  void dispose() {
+    ws.dispose();
+    messageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final receiver = widget.receiver;
+
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -149,21 +160,29 @@ class _ChatScreenState extends State<ChatScreen> {
                   ? NetworkImage(receiver["avatarUrl"])
                   : null,
               child: receiver["avatarUrl"] == null
-                  ? Text((receiver["username"] ?? 'U').substring(0, 1).toUpperCase())
+                  ? Text((receiver["username"] ?? 'U')[0].toUpperCase())
                   : null,
             ),
             const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  receiver["username"] ?? 'Unknown',
-                  style: const TextStyle(fontSize: 16),
-                ),
-              ],
-            ),
+            Text(receiver["username"] ?? 'Unknown'),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.call),
+            onPressed: () {
+              ws.startVoiceCall(
+                  chatId: widget.chatId, receiverId: receiver["id"]);
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.videocam),
+            onPressed: () {
+              ws.startVideoCall(
+                  chatId: widget.chatId, receiverId: receiver["id"]);
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -172,11 +191,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 ? const Center(child: CircularProgressIndicator())
                 : ListView.builder(
                     reverse: true,
-                    padding: const EdgeInsets.only(top: 12, bottom: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     itemCount: messages.length,
                     itemBuilder: (context, index) {
-                      // show newest at bottom: if messages are chronological, reverse index
-                      final msg = messages[messages.length - 1 - index];
+                      final msg = messages[index];
                       return _buildMessageTile(msg);
                     },
                   ),
@@ -188,30 +206,56 @@ class _ChatScreenState extends State<ChatScreen> {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   '${receiver["username"]} is typing...',
-                  style: TextStyle(color: Colors.grey.shade600, fontStyle: FontStyle.italic),
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
               ),
             ),
           SafeArea(
             child: Row(
               children: [
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: () async {
+                    final result = await FilePicker.platform.pickFiles();
+                    if (result != null && result.files.isNotEmpty) {
+                      final file = File(result.files.first.path!);
+                      await _sendAttachment(file);
+                    }
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.emoji_emotions),
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      builder: (_) => EmojiPicker(
+                        onEmojiSelected: (category, emoji) {
+                          messageController.text += emoji.emoji;
+                        },
+                      ),
+                    );
+                  },
+                ),
                 Expanded(
                   child: TextField(
                     controller: messageController,
                     decoration: const InputDecoration(
                       hintText: "Type message...",
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     ),
                     onChanged: (text) {
-                      // send typing event to websocket
-                      ws.sendTyping(widget.receiver["id"]);
+                      ws.sendTyping(widget.chatId, widget.receiver["id"]);
                     },
                   ),
                 ),
                 IconButton(
                   onPressed: _sendMessage,
                   icon: const Icon(Icons.send),
-                )
+                ),
               ],
             ),
           ),
