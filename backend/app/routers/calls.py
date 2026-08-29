@@ -5,7 +5,7 @@ from app.database import SessionLocal
 from app.models.call import CallSession
 from app.schemas.call_schema import CallSessionCreate, CallSessionResponse
 
-router = APIRouter(prefix="/calls", tags=["calls"])
+router = APIRouter(prefix="/user/{user_id}/chats/{chat_id}/calls", tags=["calls"])
 
 def get_db():
     db = SessionLocal()
@@ -22,7 +22,7 @@ def start_call(request: CallSessionCreate, db: Session = Depends(get_db)):
         callee_id=request.callee_id,
         call_type=request.call_type,
         status="initiated",
-        started_at=datetime.utcnow()
+        started_at=datetime.timezone.utc()
     )
     db.add(call)
     db.commit()

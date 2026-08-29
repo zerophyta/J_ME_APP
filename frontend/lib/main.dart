@@ -9,6 +9,7 @@ import 'routes/user_routes.dart';
 import 'routes/settings_routes.dart';
 import 'routes/chat_routes.dart';
 import 'routes/status_routes.dart';
+import 'routes/home_routes.dart';
 
 const gold = Color(0xFFD4AF37);
 const blue = Color(0xFF3D8BFF);

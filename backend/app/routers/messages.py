@@ -13,7 +13,7 @@ from app.schemas.message_schema import MessageCreate, MessageResponse
 from app.models.group import Group
 from app.dependencies import USER_SCOPE
 
-router = APIRouter(prefix="/user/{user_id}/messages", tags=["Messages"], dependencies=USER_SCOPE)
+router = APIRouter(prefix="/user/{user_id}/chats/{chat_id}/messages", tags=["Messages"], dependencies=USER_SCOPE)
 
 def get_db():
     db = SessionLocal()

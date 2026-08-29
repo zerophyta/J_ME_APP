@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
@@ -10,7 +10,7 @@ from app.database import SessionLocal
 from app.models.user import User
 from app.utils.jwt_handler import create_token, decode_token
 from app.utils.password_hash import verify_password
-import re
+import re, shutil
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
@@ -51,40 +51,56 @@ def login(credentials: LoginRequest, db: Session = Depends(get_db)):
     return {"success": True, "token": token, "role": "user"}
 
 
-
 @router.post("/register")
-async def register(user: UserRegister, db: Session = Depends(get_db)):
+async def register(
+    username: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    phone: str = Form(None),
+    avatar: UploadFile = File(None),   # <-- avatar file
+    db: Session = Depends(get_db)
+):
     # check if email exists
-    existing_user = db.query(User).filter(User.email == user.email).first()
+    existing_user = db.query(User).filter(User.email == email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already exists")
- 
-    #check if phone exist
-    existing_user = db.query(User).filter(User.phone == user.phone).first()
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Phone number already registered")
 
-
-    # validate phone if provided
-    if user.phone:
-        pattern = r"^\+255\d{9}$"  # Tanzania format
-        if not re.match(pattern, user.phone):
+    # check if phone exists
+    if phone:
+        existing_user = db.query(User).filter(User.phone == phone).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Phone number already registered")
+        # validate phone format
+        pattern = r"^\+255\d{9}$"
+        if not re.match(pattern, phone):
             raise HTTPException(status_code=400, detail="Phone must be in format +255XXXXXXXXX")
 
     # hash password
-    hashed_password = pwd_context.hash(user.password)
+    hashed_password = pwd_context.hash(password)
+
+    # handle avatar file
+    avatar_url = None
+    if avatar:
+        file_path = f"uploads/avatars/{avatar.filename}"
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(avatar.file, buffer)
+        avatar_url = file_path  # or serve via static URL
 
     # create new user
     new_user = User(
-        username=user.username,
-        email=user.email,
-        phone=user.phone,   # sasa phone itaingia DB
-        password=hashed_password
+        username=username,
+        email=email,
+        phone=phone,
+        password=hashed_password,
+        avatar=avatar_url   # <-- save avatar path/url in DB
     )
 
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
 
-    return {"message": "User registered successfully", "id": new_user.id}
-
+    return {
+        "message": "User registered successfully",
+        "id": new_user.id,
+        "avatar_url": avatar_url
+    }

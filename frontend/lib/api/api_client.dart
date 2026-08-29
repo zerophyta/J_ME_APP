@@ -11,7 +11,7 @@ class ApiClient {
 
   // Helper: add headers
   Map<String, String> _headers({bool auth = false}) {
-    final headers = {"Content-Type": "application/json"};
+    final headers = {"Accept": "application/json"};
     if (auth && token != null) {
       headers["Authorization"] = "Bearer $token";
     }
@@ -37,7 +37,7 @@ class ApiClient {
       "file_url": file.path,
       "file_type": fileType,
     });
-    final response = await http.post(Uri.parse("$baseUrl/media/"),
+    final response = await http.post(Uri.parse("$baseUrl/user/{user_id}/messages/media/"),
         headers: _headers(auth: true), body: body);
     return response.statusCode == 200;
   }
@@ -95,7 +95,7 @@ class ApiClient {
       "receiver_id": receiverId,
       "content": content,
     });
-    final res = await http.post(Uri.parse("$baseUrl/messages/"),
+    final res = await http.post(Uri.parse("$baseUrl/user/{user_id}/messages"),
         headers: _headers(auth: true), body: body);
     return jsonDecode(res.body);
   }
