@@ -123,7 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // Placeholder list of chats; replace with real data
     final sample = List.generate(12, (i) => {
           "id": i + 1,
-          "name": "Contact ${i + 1}",
+          "username": "Contact ${i + 1}",
           "lastMessage": "Last message preview ${i + 1}",
           "avatar": null,
         });
@@ -133,12 +133,12 @@ class _HomeScreenState extends State<HomeScreen> {
       itemCount: sample.length,
       separatorBuilder: (_, __) => const Divider(height: 1),
       itemBuilder: (context, index) {
-        final item = sample[index];
+        final item = sample[index] as Map<String, dynamic>;
         return ListTile(
           leading: CircleAvatar(
-            child: Text(item["name"][0]),
+            child: Text(item["username"][0]),
           ),
-          title: Text(item["name"]),
+          title: Text(item["userrname"]),
           subtitle: Text(item["lastMessage"]),
           onTap: () {
             // TODO: navigate to ChatScreen with selected contact

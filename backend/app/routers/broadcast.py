@@ -66,7 +66,7 @@ def send_broadcast(request: BroadcastRequest, db: Session = Depends(get_db)):
             sender_id=request.sender_id,
             receiver_id=rid,
             content=request.content,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.timezone.utc()
         )
         db.add(msg)
 
