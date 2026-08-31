@@ -79,6 +79,12 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  Future<void> _loadMessages() async {
+   final messages = await api.getMessages(chatId);
+   setState(() {
+    _messages = messages;
+  });
+ }
   Future<void> _sendMessage() async {
     final content = messageController.text.trim();
     if (content.isEmpty) return;
@@ -104,6 +110,106 @@ class _ChatScreenState extends State<ChatScreen> {
     );
     ws.sendUserAttachment(widget.receiver["id"], file.path);
     await _loadMessages();
+  }
+
+  void _showAttachmentOptions() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.image),
+              title: const Text("Image"),
+              onTap: () async {
+                Navigator.pop(context);
+                final result = await FilePicker.platform.pickFiles(type: FileType.image);
+                if (result != null) {
+                  final file = File(result.files.first.path!);
+                  await api.uploadImage(widget.chatId, widget.userId, file);
+                  ws.sendUserAttachment(widget.receiver["id"], file.path);
+                  await _loadMessages();
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.videocam),
+              title: const Text("Video"),
+              onTap: () async {
+                Navigator.pop(context);
+                final result = await FilePicker.platform.pickFiles(type: FileType.video);
+                if (result != null) {
+                  final file = File(result.files.first.path!);
+                  await api.uploadVideo(widget.chatId, widget.userId, file);
+                  ws.sendUserAttachment(widget.receiver["id"], file.path);
+                  await _loadMessages();
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.audiotrack),
+              title: const Text("Audio"),
+              onTap: () async {
+                Navigator.pop(context);
+                final result = await FilePicker.platform.pickFiles(type: FileType.audio);
+                if (result != null) {
+                  final file = File(result.files.first.path!);
+                  await api.uploadAudio(widget.chatId, widget.userId, file);
+                  ws.sendUserAttachment(widget.receiver["id"], file.path);
+                  await _loadMessages();
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.insert_drive_file),
+              title: const Text("Document"),
+              onTap: () async {
+                Navigator.pop(context);
+                final result = await FilePicker.platform.pickFiles(type: FileType.any);
+                if (result != null) {
+                  final file = File(result.files.first.path!);
+                  await api.uploadDocument(widget.chatId, widget.userId, file);
+                  ws.sendUserAttachment(widget.receiver["id"], file.path);
+                  await _loadMessages();
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.poll),
+              title: const Text("Poll"),
+              onTap: () async {
+                Navigator.pop(context);
+                await api.uploadPoll(widget.chatId, widget.userId,
+                    "Which feature do you like?", ["Chat", "Calls", "Status"]);
+                ws.sendUserAttachment(widget.receiver["id"], "Poll created");
+                await _loadMessages();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.location_on),
+              title: const Text("Location"),
+              onTap: () async {
+                Navigator.pop(context);
+                await api.uploadLocation(widget.chatId, widget.userId, -6.8, 39.2);
+                ws.sendUserAttachment(widget.receiver["id"], "Location shared");
+                await _loadMessages();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.contacts),
+              title: const Text("Contact"),
+              onTap: () async {
+                Navigator.pop(context);
+                await api.uploadContact(widget.chatId, widget.userId,
+                    "Jaram Zerophyta", "+255700000000");
+                ws.sendUserAttachment(widget.receiver["id"], "Contact shared");
+                await _loadMessages();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _buildMessageTile(dynamic msg) {
@@ -171,15 +277,13 @@ class _ChatScreenState extends State<ChatScreen> {
           IconButton(
             icon: const Icon(Icons.call),
             onPressed: () {
-              ws.startVoiceCall(
-                  chatId: widget.chatId, receiverId: receiver["id"]);
+              ws.startVoiceCall(widget.userId, receiver["id"]);
             },
           ),
           IconButton(
             icon: const Icon(Icons.videocam),
             onPressed: () {
-              ws.startVideoCall(
-                  chatId: widget.chatId, receiverId: receiver["id"]);
+              ws.startVideoCall(widget.userId, receiver["id"]);
             },
           ),
         ],
@@ -205,14 +309,14 @@ class _ChatScreenState extends State<ChatScreen> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  '${receiver["username"]} is typing...',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
+                                '${receiver["username"]} is typing...',
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontStyle: FontStyle.italic,
               ),
             ),
+          ),
+        ),
           SafeArea(
             child: Row(
               children: [
@@ -242,7 +346,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     ),
                     onChanged: (text) {
-                      ws.sendTyping(widget.chatId, widget.receiver["id"]);
+                      ws.sendTyping(widget.chatId, widget.userId);
                     },
                   ),
                 ),
@@ -257,104 +361,4 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
     );
   }
-}
-
-void _showAttachmentOptions() {
-  showModalBottomSheet(
-    context: context,
-    builder: (context) {
-      return Wrap(
-        children: [
-          ListTile(
-            leading: const Icon(Icons.image),
-            title: const Text("Image"),
-            onTap: () async {
-              Navigator.pop(context);
-              final result = await FilePicker.platform.pickFiles(type: FileType.image);
-              if (result != null) {
-                final file = File(result.files.first.path!);
-                await api.uploadImage(widget.chatId, widget.userId, file);
-                ws.sendUserAttachment(widget.receiver["id"], file.path);
-                await _loadMessages();
-              }
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.videocam),
-            title: const Text("Video"),
-            onTap: () async {
-              Navigator.pop(context);
-              final result = await FilePicker.platform.pickFiles(type: FileType.video);
-              if (result != null) {
-                final file = File(result.files.first.path!);
-                await api.uploadVideo(widget.chatId, widget.userId, file);
-                ws.sendUserAttachment(widget.receiver["id"], file.path);
-                await _loadMessages();
-              }
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.audiotrack),
-            title: const Text("Audio"),
-            onTap: () async {
-              Navigator.pop(context);
-              final result = await FilePicker.platform.pickFiles(type: FileType.audio);
-              if (result != null) {
-                final file = File(result.files.first.path!);
-                await api.uploadAudio(widget.chatId, widget.userId, file);
-                ws.sendUserAttachment(widget.receiver["id"], file.path);
-                await _loadMessages();
-              }
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.insert_drive_file),
-            title: const Text("Document"),
-            onTap: () async {
-              Navigator.pop(context);
-              final result = await FilePicker.platform.pickFiles(type: FileType.any);
-              if (result != null) {
-                final file = File(result.files.first.path!);
-                await api.uploadDocument(widget.chatId, widget.userId, file);
-                ws.sendUserAttachment(widget.receiver["id"], file.path);
-                await _loadMessages();
-              }
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.poll),
-            title: const Text("Poll"),
-            onTap: () async {
-              Navigator.pop(context);
-              await api.uploadPoll(widget.chatId, widget.userId,
-                  "Which feature do you like?", ["Chat", "Calls", "Status"]);
-              ws.sendUserAttachment(widget.receiver["id"], "Poll created");
-              await _loadMessages();
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.location_on),
-            title: const Text("Location"),
-            onTap: () async {
-              Navigator.pop(context);
-              await api.uploadLocation(widget.chatId, widget.userId, -6.8, 39.2);
-              ws.sendUserAttachment(widget.receiver["id"], "Location shared");
-              await _loadMessages();
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.contacts),
-            title: const Text("Contact"),
-            onTap: () async {
-              Navigator.pop(context);
-              await api.uploadContact(widget.chatId, widget.userId,
-                  "John Doe", "+255700000000");
-              ws.sendUserAttachment(widget.receiver["id"], "Contact shared");
-              await _loadMessages();
-            },
-          ),
-        ],
-      );
-    },
-  );
 }

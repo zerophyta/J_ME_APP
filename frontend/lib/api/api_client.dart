@@ -51,7 +51,7 @@ Future<Map<String, dynamic>> createUser(String username, String email, String pa
   final res = await http.post(Uri.parse("$baseUrl/auth/register"),
       headers: _headers(), body: body);
   return jsonDecode(res.body);
-}
+  }
 
 Future<bool> login(String email, String password) async {
   final body = jsonEncode({"identifier": email, "password": password});
@@ -66,21 +66,21 @@ Future<bool> login(String email, String password) async {
     }
   }
   return false;
-}
+  }
 
 Future<Map<String, dynamic>> getUser(int userId) async {
   await loadToken();
   final res = await http.get(Uri.parse("$baseUrl/users/$userId"),
       headers: _headers(auth: true));
   return jsonDecode(res.body);
-}
+  }
 
 Future<Map<String, dynamic>> updateUser(int userId, Map<String, dynamic> values) async {
   await loadToken();
   final res = await http.put(Uri.parse("$baseUrl/users/$userId"),
       headers: _headers(auth: true), body: jsonEncode(values));
   return jsonDecode(res.body);
-}
+  }
 
 // ======================
 // 7. Chats
@@ -90,7 +90,7 @@ Future<List<dynamic>> getChats() async {
   final res = await http.get(Uri.parse("$baseUrl/chats"),
       headers: _headers(auth: true));
   return jsonDecode(res.body);
-}
+  }
 
 Future<Map<String, dynamic>> startChat(String identifier, int currentUserId) async {
   await loadToken();
@@ -100,7 +100,7 @@ Future<Map<String, dynamic>> startChat(String identifier, int currentUserId) asy
   });
   final res = await http.post(uri, headers: _headers(auth: true));
   return jsonDecode(res.body);
-}
+  }
 
 
  // ======================
@@ -118,14 +118,14 @@ Future<Map<String, dynamic>> sendMessage(int chatId, int senderId, String conten
   final res = await http.post(Uri.parse("$baseUrl/user/{user_id}/messages"),
       headers: _headers(auth: true), body: body);
   return jsonDecode(res.body);
-}
+  }
 
 Future<List<dynamic>> getMessages(int chatId, {int? groupId}) async {
   final query = groupId == null ? "chat_id=$chatId" : "group_id=$groupId";
   final res = await http.get(Uri.parse("$baseUrl/messages/?$query"),
       headers: _headers(auth: true));
   return jsonDecode(res.body);
-}
+  }
 
 Future<List<dynamic>> getSecretMessages(int secretChatId) async {
   await loadToken();
@@ -133,7 +133,7 @@ Future<List<dynamic>> getSecretMessages(int secretChatId) async {
       Uri.parse("$baseUrl/messages/?secret_chat_id=$secretChatId"),
       headers: _headers(auth: true));
   return jsonDecode(res.body);
-}
+  }
 
 // Attachments (examples)
 Future<bool> uploadFile(int chatId, int senderId, File file) async {
@@ -146,7 +146,7 @@ Future<bool> uploadFile(int chatId, int senderId, File file) async {
   request.files.add(await http.MultipartFile.fromPath('file', file.path));
   final response = await request.send();
   return response.statusCode == 200;
-}
+  }
 
 
 // ======================
@@ -163,7 +163,7 @@ Future<bool> editMessage(int chatId, int messageId, String newText) async {
       Uri.parse("$baseUrl/chat/$chatId/message/$messageId/edit"),
       headers: _headers(auth: true), body: body);
   return res.statusCode == 200;
-}
+  }
 
 Future<bool> deleteMessageForMe(int chatId, int messageId) async {
   await loadToken();
@@ -171,7 +171,7 @@ Future<bool> deleteMessageForMe(int chatId, int messageId) async {
       Uri.parse("$baseUrl/chat/$chatId/message/$messageId/delete_for_me"),
       headers: _headers(auth: true));
   return res.statusCode == 200;
-}
+  }
 
 
 // Similar implementations for uploadImage, uploadVideo, uploadAudio, etc.
@@ -183,14 +183,14 @@ Future<Map<String, dynamic>> createGroup(String name, int adminId) async {
   final res = await http.post(Uri.parse("$baseUrl/groups/"),
       headers: _headers(auth: true), body: body);
   return jsonDecode(res.body);
-}
+  }
 
 Future<List<dynamic>> getGroups() async {
   await loadToken();
   final res = await http.get(Uri.parse("$baseUrl/groups/"),
       headers: _headers(auth: true));
   return jsonDecode(res.body);
-}
+  }
 
 Future<Map<String, dynamic>> sendBroadcast(int senderId, List<int> recipientIds, String content) async {
   await loadToken();
@@ -202,7 +202,7 @@ Future<Map<String, dynamic>> sendBroadcast(int senderId, List<int> recipientIds,
   final res = await http.post(Uri.parse("$baseUrl/broadcast"),
       headers: _headers(auth: true), body: body);
   return jsonDecode(res.body);
-}
+  }
 
 // ======================
 // 4. Privacy & Settings
@@ -212,7 +212,7 @@ Future<Map<String, dynamic>> settings(int userId, String setting, String value) 
   final res = await http.post(Uri.parse("$baseUrl/privacy/"),
       headers: _headers(auth: true), body: body);
   return jsonDecode(res.body);
-}
+  }
 
 Future<bool> setPrivacy(bool lastSeenVisible, bool profilePhotoVisible, bool readReceiptsEnabled,
     {int userId = 1}) async {
@@ -237,7 +237,79 @@ Future<bool> setPrivacy(bool lastSeenVisible, bool profilePhotoVisible, bool rea
     }
   }
   return true;
-}
+  }
+
+Future<Map<String, dynamic>> getAdvancedPrivacy() async {
+  await loadToken();
+  final res = await http.get(Uri.parse("$baseUrl/privacy/advanced"),
+      headers: _headers(auth: true));
+  return jsonDecode(res.body);
+  }
+
+Future<bool> setAdvancedPrivacy(Map<String, dynamic> settings) async {  
+  await loadToken();
+  final res = await http.post(Uri.parse("$baseUrl/privacy/advanced"),
+      headers: _headers(auth: true), body: jsonEncode(settings));
+  return res.statusCode == 200;
+  }
+
+Future<bool> unblockUser(int id) async {  
+  await loadToken();
+  final res = await http.post(Uri.parse("$baseUrl/privacy/unblock/$id"),
+      headers: _headers(auth: true));
+  return res.statusCode == 200;
+  }
+
+Future<bool> blockUser(int id) async {
+  await loadToken();
+  final res = await http.post(Uri.parse("$baseUrl/privacy/block/$id"),
+      headers: _headers(auth: true));
+  return res.statusCode == 200;
+  } 
+
+Future<bool> setBlockedUsers(List<int> blockedUserIds) async {
+  await loadToken();
+  final body = jsonEncode({"blocked_user_ids": blockedUserIds});
+  final res = await http.post(Uri.parse("$baseUrl/privacy/set_blocked_users"),
+      headers: _headers(auth: true), body: body);
+  return res.statusCode == 200;
+  } 
+
+Future<List<int>> getBlockedUsers() async {
+  await loadToken();
+  final res = await http.get(Uri.parse("$baseUrl/privacy/blocked_users"),
+      headers: _headers(auth: true));
+  if (res.statusCode == 200) {
+    final data = jsonDecode(res.body);
+    return List<int>.from(data['blocked_user_ids']);
+  } else {
+    throw Exception('Failed to fetch blocked users');
+  }
+  }
+
+Future<bool> setsettings(int userId, String setting, String value) async {
+  await loadToken();
+  final body = jsonEncode({"user_id": userId, "setting": setting, "value": value});
+  final res = await http.post(Uri.parse("$baseUrl/privacy/"),
+      headers: _headers(auth: true), body: body);
+  return res.statusCode == 200;
+  }
+
+Future<Map<String, dynamic>> getsettings(int userId, String setting) async {
+  await loadToken();
+  final res = await http.get(Uri.parse("$baseUrl/privacy/$userId/$setting"),
+      headers: _headers(auth: true));
+  return jsonDecode(res.body);
+  }
+
+Future<bool> setNotificationSettings(int userId, Map<String, dynamic> settings) async {
+  await loadToken();
+  final res = await http.post(Uri.parse("$baseUrl/notifications/settings"),
+      headers: _headers(auth: true), body: jsonEncode({"user_id": userId, "settings": settings}));
+  return res.statusCode == 200;
+  }
+    
+
 
 // ======================
 // 5. Secret Chats
@@ -251,7 +323,7 @@ Future<Map<String, dynamic>> createSecretChat(int user1Id, int user2Id, String e
   final res = await http.post(Uri.parse("$baseUrl/secret_chat/"),
       headers: _headers(auth: true), body: body);
   return jsonDecode(res.body);
-}
+  }
 
 Future<bool> sendSecretMessage(int chatId, int userId, String content, [int destructSeconds = 0]) async {
   await loadToken();
@@ -264,7 +336,7 @@ Future<bool> sendSecretMessage(int chatId, int userId, String content, [int dest
   final res = await http.post(Uri.parse("$baseUrl/secret_chat/send"),
       headers: _headers(auth: true), body: body);
   return res.statusCode == 201;
-}
+  }
 
 // ======================
 // 8. Statuses
@@ -274,7 +346,7 @@ Future<List<dynamic>> getStatuses() async {
   final res = await http.get(Uri.parse("$baseUrl/status"),
       headers: _headers(auth: true));
   return jsonDecode(res.body);
-}
+  }
 
 Future<bool> uploadStatus(String content) async {
   await loadToken();
@@ -282,21 +354,21 @@ Future<bool> uploadStatus(String content) async {
   final res = await http.post(Uri.parse("$baseUrl/status/upload"),
       headers: _headers(auth: true), body: body);
   return res.statusCode == 201;
-}
+  }
 
 Future<List<dynamic>> getStatusViewers(int statusId) async {
   await loadToken();
   final res = await http.get(Uri.parse("$baseUrl/status/$statusId/viewers"),
       headers: _headers(auth: true));
   return jsonDecode(res.body);
-}
+  }
 
 Future<List<dynamic>> getArchivedStatuses() async {
   await loadToken();
   final res = await http.get(Uri.parse("$baseUrl/status/archive"),
       headers: _headers(auth: true));
   return jsonDecode(res.body);
-}
+  }
 
 // ======================
 // 9. Storage
@@ -306,14 +378,14 @@ Future<Map<String, dynamic>> getStorageUsage() async {
   final res = await http.get(Uri.parse("$baseUrl/storage/usage"),
       headers: _headers(auth: true));
   return jsonDecode(res.body);
-}
+  }
 
 Future<bool> clearCache() async {
   await loadToken();
   final res = await http.post(Uri.parse("$baseUrl/storage/clear"),
       headers: _headers(auth: true));
   return res.statusCode == 200;
-}
+  }
 
 Future<bool> setAutoDownload(bool enabled) async {
   await loadToken();
@@ -321,7 +393,7 @@ Future<bool> setAutoDownload(bool enabled) async {
   final res = await http.post(Uri.parse("$baseUrl/storage/auto_download"),
       headers: _headers(auth: true), body: body);
   return res.statusCode == 200;
-}
+  }
 
 // ======================
 // 10. Devices & Security
@@ -331,28 +403,28 @@ Future<List<dynamic>> getActiveDevices() async {
   final res = await http.get(Uri.parse("$baseUrl/devices/active"),
       headers: _headers(auth: true));
   return jsonDecode(res.body);
-}
+  }
 
 Future<bool> revokeDevice(int deviceId) async {
   await loadToken();
   final res = await http.post(Uri.parse("$baseUrl/devices/$deviceId/revoke"),
       headers: _headers(auth: true));
   return res.statusCode == 200;
-}
+  }
 
 Future<bool> revokeAllDevices() async {
   await loadToken();
   final res = await http.post(Uri.parse("$baseUrl/account/revoke_devices"),
       headers: _headers(auth: true));
   return res.statusCode == 200;
-}
+  }
 
 Future<Map<String, dynamic>> getAccountSecurity() async {
   await loadToken();
   final res = await http.get(Uri.parse("$baseUrl/account/security"),
       headers: _headers(auth: true));
   return jsonDecode(res.body);
-}
+  }
 
 Future<bool> setTwoFactor(bool enabled) async {
   await loadToken();
@@ -360,14 +432,14 @@ Future<bool> setTwoFactor(bool enabled) async {
   final res = await http.post(Uri.parse("$baseUrl/account/two_factor"),
       headers: _headers(auth: true), body: body);
   return res.statusCode == 200;
-}
+  }
 
 Future<List<dynamic>> getLoginHistory() async {
   await loadToken();
   final res = await http.get(Uri.parse("$baseUrl/account/login_history"),
       headers: _headers(auth: true));
   return jsonDecode(res.body);
-}
+  }
 
 // ======================
 // 11. Calls
@@ -382,21 +454,21 @@ Future<Map<String, dynamic>> startCall(int callerId, int calleeId, String callTy
         "call_type": callType
       }));
   return jsonDecode(res.body);
-}
+  }
 
 Future<List<dynamic>> getCallHistory(int userId) async {
   await loadToken();
   final res = await http.get(Uri.parse("$baseUrl/calls/history/$userId"),
       headers: _headers(auth: true));
   return jsonDecode(res.body);
-}
+  }
 
 Future<Map<String, dynamic>> endCall(int callId) async {
   await loadToken();
   final res = await http.post(Uri.parse("$baseUrl/calls/$callId/end"),
       headers: _headers(auth: true));
   return jsonDecode(res.body);
-}
+  }
 
 Future<Map<String, dynamic>> startGroupCall(int callerId, int chatId, String callType) async {
   await loadToken();
@@ -408,7 +480,7 @@ Future<Map<String, dynamic>> startGroupCall(int callerId, int chatId, String cal
         "call_type": callType
       }));
   return jsonDecode(res.body);
-}
+  }
 
 Future<Map<String, dynamic>> joinGroupCall(int callId, int userId) async {
   await loadToken();
@@ -416,7 +488,7 @@ Future<Map<String, dynamic>> joinGroupCall(int callId, int userId) async {
       .replace(queryParameters: {"user_id": userId.toString()});
   final res = await http.post(uri, headers: _headers(auth: true));
   return jsonDecode(res.body);
-}
+  }
 
 // ======================
 // Upload Attachments
@@ -432,7 +504,7 @@ Future<bool> uploadImage(int chatId, int senderId, File image) async {
   request.files.add(await http.MultipartFile.fromPath('image', image.path));
   final response = await request.send();
   return response.statusCode == 200;
-}
+  }
 
 Future<bool> uploadVideo(int chatId, int senderId, File video) async {
   await loadToken();
@@ -444,7 +516,7 @@ Future<bool> uploadVideo(int chatId, int senderId, File video) async {
   request.files.add(await http.MultipartFile.fromPath('video', video.path));
   final response = await request.send();
   return response.statusCode == 200;
-}
+  }
 
 Future<bool> uploadAudio(int chatId, int senderId, File audio) async {
   await loadToken();
@@ -456,7 +528,7 @@ Future<bool> uploadAudio(int chatId, int senderId, File audio) async {
   request.files.add(await http.MultipartFile.fromPath('audio', audio.path));
   final response = await request.send();
   return response.statusCode == 200;
-}
+  }
 
 Future<bool> uploadDocument(int chatId, int senderId, File document) async {
   await loadToken();
@@ -468,7 +540,7 @@ Future<bool> uploadDocument(int chatId, int senderId, File document) async {
   request.files.add(await http.MultipartFile.fromPath('document', document.path));
   final response = await request.send();
   return response.statusCode == 200;
-}
+  }
 
 Future<bool> uploadSticker(int chatId, int senderId, File sticker) async {
   await loadToken();
@@ -480,7 +552,7 @@ Future<bool> uploadSticker(int chatId, int senderId, File sticker) async {
   request.files.add(await http.MultipartFile.fromPath('sticker', sticker.path));
   final response = await request.send();
   return response.statusCode == 200;
-}
+  }
 
 Future<bool> uploadVoiceNote(int chatId, int senderId, File voiceNote) async {
   await loadToken();
@@ -492,7 +564,7 @@ Future<bool> uploadVoiceNote(int chatId, int senderId, File voiceNote) async {
   request.files.add(await http.MultipartFile.fromPath('voice_note', voiceNote.path));
   final response = await request.send();
   return response.statusCode == 200;
-}
+  }
 
 // Metadata-based uploads
 Future<bool> uploadLocation(int chatId, int senderId, double latitude, double longitude) async {
@@ -506,7 +578,7 @@ Future<bool> uploadLocation(int chatId, int senderId, double latitude, double lo
   final response = await http.post(Uri.parse("$baseUrl/user/{user_id}/messages/location/"),
       headers: _headers(auth: true), body: body);
   return response.statusCode == 200;
-}
+  }
 
 Future<bool> uploadContact(int chatId, int senderId, String contactName, String contactNumber) async {
   await loadToken();
@@ -519,7 +591,7 @@ Future<bool> uploadContact(int chatId, int senderId, String contactName, String 
   final response = await http.post(Uri.parse("$baseUrl/user/{user_id}/messages/contact/"),
       headers: _headers(auth: true), body: body);
   return response.statusCode == 200;
-}
+  }
 
 Future<bool> uploadPoll(int chatId, int senderId, String question, List<String> options) async {
   await loadToken();
@@ -532,7 +604,7 @@ Future<bool> uploadPoll(int chatId, int senderId, String question, List<String> 
   final response = await http.post(Uri.parse("$baseUrl/user/{user_id}/messages/poll/"),
       headers: _headers(auth: true), body: body);
   return response.statusCode == 200;
-}
+  }
 
 Future<bool> uploadEvent(int chatId, int senderId, String eventName, String eventDate) async {
   await loadToken();
@@ -545,7 +617,7 @@ Future<bool> uploadEvent(int chatId, int senderId, String eventName, String even
   final response = await http.post(Uri.parse("$baseUrl/user/{user_id}/messages/event/"),
       headers: _headers(auth: true), body: body);
   return response.statusCode == 200;
-}
+  }
 
 Future<bool> uploadTask(int chatId, int senderId, String taskName, String dueDate) async {
   await loadToken();
@@ -558,7 +630,7 @@ Future<bool> uploadTask(int chatId, int senderId, String taskName, String dueDat
   final response = await http.post(Uri.parse("$baseUrl/user/{user_id}/messages/task/"),
       headers: _headers(auth: true), body: body);
   return response.statusCode == 200;
-}
+  }
 
 Future<bool> uploadAnnouncement(int chatId, int senderId, String announcement) async {
   await loadToken();
@@ -570,7 +642,7 @@ Future<bool> uploadAnnouncement(int chatId, int senderId, String announcement) a
   final response = await http.post(Uri.parse("$baseUrl/user/{user_id}/messages/announcement/"),
       headers: _headers(auth: true), body: body);
   return response.statusCode == 200;
-}
+  }
 
 Future<bool> uploadReminder(int chatId, int senderId, String reminderText, String reminderTime) async {
   await loadToken();
@@ -583,7 +655,7 @@ Future<bool> uploadReminder(int chatId, int senderId, String reminderText, Strin
   final response = await http.post(Uri.parse("$baseUrl/user/{user_id}/messages/reminder/"),
       headers: _headers(auth: true), body: body);
   return response.statusCode == 200;
-}
+  }
 
 Future<bool> uploadReaction(int chatId, int senderId, int messageId, String reaction) async {
   await loadToken();
@@ -596,7 +668,7 @@ Future<bool> uploadReaction(int chatId, int senderId, int messageId, String reac
   final response = await http.post(Uri.parse("$baseUrl/user/{user_id}/messages/reaction/"),
       headers: _headers(auth: true), body: body);
   return response.statusCode == 200;
-}
+  }
 
 Future<bool> uploadStickerPack(int chatId, int senderId, String packName, List<String> stickers) async {
   await loadToken();
@@ -609,7 +681,18 @@ Future<bool> uploadStickerPack(int chatId, int senderId, String packName, List<S
   final response = await http.post(Uri.parse("$baseUrl/user/{user_id}/messages/sticker_pack/"),
       headers: _headers(auth: true), body: body);
   return response.statusCode == 200;
-}
+  }
+
+Future<void> sendAttachment(int chatId, int senderId, File file, {required int receiverId}) async {
+  final attachments = [
+    {
+      "receiver_id": receiverId,
+      "file_path": file.path,
+      "type": "file",
+    }
+  ];
+  await sendAttachments(chatId, senderId, attachments);
+  }
 
 Future<void> sendAttachments(int chatId, int senderId, List<Map<String, dynamic>> attachments) async {
   await loadToken();
@@ -622,6 +705,48 @@ Future<void> sendAttachments(int chatId, int senderId, List<Map<String, dynamic>
       headers: _headers(auth: true), body: body);
   if (response.statusCode != 200) {
     throw Exception('Failed to send attachments');
+   }
   }
-}
+
+Future<bool> forwardMessage(int messageId, List<int> chatIds) async { 
+  await loadToken();
+  final body = jsonEncode({
+    "message_id": messageId,
+    "chat_ids": chatIds,
+  });
+  final res = await http.post(Uri.parse("$baseUrl/messages/forward"),
+      headers: _headers(auth: true), body: body);
+  return res.statusCode == 200;
+  }
+
+Future<bool> markMessageAsRead(int messageId) async {
+  await loadToken();
+  final res = await http.post(Uri.parse("$baseUrl/messages/$messageId/read"),
+      headers: _headers(auth: true));
+  return res.statusCode == 200;
+  }
+
+Future<bool> deleteMessageForEveryone(int chatId, int messageId) async {
+  await loadToken();
+  final res = await http.post(
+      Uri.parse("$baseUrl/chat/$chatId/message/$messageId/delete_for_everyone"),
+      headers: _headers(auth: true));
+  return res.statusCode == 200;
+  }
+
+Future<bool> leaveGroupCall(int callId, int userId) async {
+  await loadToken();
+  final uri = Uri.parse("$baseUrl/group_calls/$callId/leave")
+      .replace(queryParameters: {"user_id": userId.toString()});
+  final res = await http.post(uri, headers: _headers(auth: true));
+  return res.statusCode == 200;
+  }
+
+Future<bool> endGroupCall(int callId, int userId) async {
+  await loadToken();
+  final uri = Uri.parse("$baseUrl/group_calls/$callId/end")
+      .replace(queryParameters: {"user_id": userId.toString()});
+  final res = await http.post(uri, headers: _headers(auth: true));
+  return res.statusCode == 200;
+  }
 }

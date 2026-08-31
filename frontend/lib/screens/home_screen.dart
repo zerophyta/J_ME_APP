@@ -138,11 +138,11 @@ class _HomeScreenState extends State<HomeScreen> {
           leading: CircleAvatar(
             child: Text(item["username"][0]),
           ),
-          title: Text(item["userrname"]),
+          title: Text(item["username"]),
           subtitle: Text(item["lastMessage"]),
           onTap: () {
             // TODO: navigate to ChatScreen with selected contact
-            debugPrint('Open chat with ${item["name"]}');
+            debugPrint('Open chat with ${item["username"]}');
           },
         );
       },
