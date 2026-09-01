@@ -42,7 +42,7 @@ def end_call(call_id: int, db: Session = Depends(get_db)):
     return call
 
 # Get call history for a user
-@router.get("/history/{user_id}", response_model=list[CallSessionResponse])
+@router.get("/history", response_model=list[CallSessionResponse])
 def get_call_history(user_id: int, db: Session = Depends(get_db)):
     calls = db.query(CallSession).filter(
         (CallSession.caller_id == user_id) | (CallSession.callee_id == user_id)
